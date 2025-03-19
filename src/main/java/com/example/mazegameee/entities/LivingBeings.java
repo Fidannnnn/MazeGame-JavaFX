@@ -11,6 +11,22 @@ public class LivingBeings extends GameElements implements Executable {
         this.strength = strength;
     }
 
+    public void attack(LivingBeings target) {
+        target.takeDamage(this.strength);
+    }
+
+    public void takeDamage(int damage) {
+        this.health -= damage;
+        if (this.health <= 0) {
+            die();
+        }
+    }
+
+    public void die(){
+        System.out.println("dead");
+    };
+
+
     @Override
     public void execute() {
 
@@ -21,4 +37,6 @@ public class LivingBeings extends GameElements implements Executable {
     public int getY(){
         return y;
     }
+    // attack()
+    // hero npc classes
 }

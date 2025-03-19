@@ -57,4 +57,6 @@ public class Room extends StructuralElements implements Activable {
     public int getY(){
         return y;
     }
+
+    // check when hero enters the room and activate npcs
 }
