@@ -1,6 +1,11 @@
 package com.example.mazegameee.game;
 
+import com.example.mazegameee.LivingBeings.Hero;
+import com.example.mazegameee.entities.Objects;
 import com.example.mazegameee.objects.Chest;
+import com.example.mazegameee.objects.Crowbar;
+import com.example.mazegameee.objects.HealthPotion;
+import com.example.mazegameee.objects.Key;
 import com.example.mazegameee.structures.Room;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -12,6 +17,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+import java.util.List;
 import java.util.Random;
 
 public class GameUI {
@@ -25,21 +31,24 @@ public class GameUI {
     private int npcRow = 5, npcCol = 5; // Start in center
     private Random random = new Random();
 
+    private ImageView ChestImage;
+
+    private Hero hero;
+
+
     public GameUI(int gridSize) {
         gridPane = new GridPane();
         drawGrid(gridSize);
         addHero();
         addNPC();
+        addChest(gridSize);
         startNPCMovement();
     }
 
     private void drawGrid(int size) {
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
-                Rectangle cell = new Rectangle(CELL_SIZE, CELL_SIZE);
-                cell.setStroke(Color.BLACK);
-                cell.setFill(Color.LIGHTGRAY);
-                gridPane.add(cell, col, row);
+                addRoom(row, col);
             }
         }
     }
@@ -47,6 +56,16 @@ public class GameUI {
     public GridPane getGridPane() {
         return gridPane;
     }
+
+    private void addRoom(int row, int col) {
+        Image roomIcon = new Image("tile.png"); // Replace with your actual room image
+        ImageView roomImage = new ImageView(roomIcon);
+        roomImage.setFitWidth(CELL_SIZE);
+        roomImage.setFitHeight(CELL_SIZE);
+
+        gridPane.add(roomImage, col, row);
+    }
+
 
     private void addHero() {
         Image heroIcon = new Image("hero.png"); // Replace with actual image path
@@ -91,10 +110,10 @@ public class GameUI {
     }
 
     private void moveNPC() {
-        int newRow = npcRow + random.nextInt(3) - 1; // Move up/down
-        int newCol = npcCol + random.nextInt(3) - 1; // Move left/right
+        int newRow = npcRow + random.nextInt(3) - 1;
+        int newCol = npcCol + random.nextInt(3) - 1;
 
-        if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 10) {
+        if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 10 && (newRow != heroRow || newCol != heroCol)) {
             gridPane.getChildren().remove(npcImage);
             npcRow = newRow;
             npcCol = newCol;
@@ -102,29 +121,45 @@ public class GameUI {
         }
     }
 
-    /*
-    private void addChest(int row, int col) {
-        Rectangle chest = new Rectangle(CELL_SIZE, CELL_SIZE);
-        chest.setFill(Color.GOLD);
 
-        chest.setOnMouseClicked(event -> {
+
+    private void addChest(int size) {
+        Rectangle rect = new Rectangle(CELL_SIZE, CELL_SIZE);
+        rect.setFill(Color.GOLD);
+        int row = random.nextInt(size);
+        int col = random.nextInt(size);
+        Chest chest = new Chest(row,col,true);
+
+        rect.setOnMouseClicked(event -> {
             if (Math.abs(heroRow - row) <= 1 && Math.abs(heroCol - col) <= 1) {
-                System.out.println("Chest opened! You found a key.");
+                System.out.println("Chest opened!");
+                chest.unlock(hero);
+                List<Objects> items = chest.getItems();
+                for  (Objects item : items) {
+                    if (item instanceof Key){
+                        hero.addNumOfKeys(1);
+                    }
+                    else if (item instanceof Crowbar) {
+                        hero.addNumOfCrowbars(1);
+                    } else if (item instanceof HealthPotion) {
+                        int health = ((HealthPotion) item).getHealthPoints();
+                        hero.addHealth(health);
+                    }
+                }
+                System.out.println("Chest added!");
             } else {
                 System.out.println("Move closer to open.");
             }
         });
-
-        gridPane.add(chest, col, row);
+        gridPane.add(rect, col, row);
     }
-
+    /*
     private void addRandomChests(int totalChests) {
         Random random = new Random();
         int placed = 0;
 
         while (placed < totalChests) {
-            int row = random.nextInt(board.getRows());
-            int col = random.nextInt(board.getCols());
+
 
             Room room = gridPane.getRoom(row, col);
             if (!room.hasChest()) { // Ensure no duplicate chests
