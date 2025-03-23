@@ -47,7 +47,7 @@ public class Chest extends Objects implements Activable {
         }
     }
 
-    public void unlock(Hero hero) {
+    public boolean unlock(Hero hero) {
         if (locked) {
             if (hero.getNumOfKeys() > 0) {
                 hero.addNumOfKeys(-1);
@@ -59,10 +59,12 @@ public class Chest extends Objects implements Activable {
                 System.out.println("You used a crowbar! The chest is now unlocked.");
             } else {
                 System.out.println("You need a key or crowbar to open this chest!");
+                return false;
             }
         } else {
             System.out.println("Chest is already unlocked!");
         }
+        return true;
     }
 
 

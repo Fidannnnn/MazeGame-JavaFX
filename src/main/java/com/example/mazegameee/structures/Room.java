@@ -16,15 +16,15 @@ public class Room extends StructuralElements implements Activable {
         super(x, y);
         this.roomID = roomID;
         this.objects = objects;
-        this.doors = doors;
+        this.doors = (doors != null) ? doors : new ArrayList<>();
     }
 
     @Override
     public void activate() {
         if (locked) {
-            System.out.println(roomID + " is locked!");
+            System.out.println("Room " + roomID + " is locked!");
         } else {
-            System.out.println(roomID + " is now open!");
+            System.out.println("Room " + roomID + " is now open!");
         }
     }
 
@@ -47,16 +47,31 @@ public class Room extends StructuralElements implements Activable {
     public ArrayList<Door> getDoors() {
         return doors;
     }
+
     public void setDoors(ArrayList<Door> doors) {
         this.doors = doors;
     }
 
-    public int getX(){
+    public void addDoor(Door door) {
+        if (!doors.contains(door)) {
+            doors.add(door);
+        }
+    }
+
+    public int getX() {
         return x;
     }
-    public int getY(){
+
+    public int getY() {
         return y;
     }
 
-    // check when hero enters the room and activate npcs
+    public boolean isConnectedTo(Room other) {
+        for (Door door : doors) {
+            if (door.getOtherRoom(this) != null && door.getOtherRoom(this).equals(other) && !door.isLocked()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

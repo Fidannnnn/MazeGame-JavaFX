@@ -5,7 +5,7 @@ import com.example.mazegameee.entities.LivingBeings;
 public class Hero extends LivingBeings {
     private int strength;
     private int health;
-    private int numOfKeys = 0;
+    private int numOfKeys = 5;
     private int numOfCrowbars = 0;
 
     public int getStrength() {
