@@ -2,6 +2,8 @@ package com.example.mazegameee.structures;
 
 import com.example.mazegameee.behaviours.Activable;
 import com.example.mazegameee.entities.StructuralElements;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
 
@@ -9,6 +11,8 @@ public class Door extends StructuralElements implements Activable {
     private int doorID;
     private boolean locked;
     private Room room1, room2;
+    private Rectangle visual;
+
 
     public Door(int x, int y, int doorID, boolean locked, Room room1, Room room2) {
         super(x, y);
@@ -59,6 +63,18 @@ public class Door extends StructuralElements implements Activable {
         if (room2 != null && room2.equals(current)) return room1;
         return null;
     }
+
+
+    public void setVisual(Rectangle visual) {
+        this.visual = visual;
+    }
+
+    public void updateVisual() {
+        if (visual != null) {
+            visual.setFill(isLocked() ? Color.DARKRED : Color.SADDLEBROWN);
+        }
+    }
+
 
     public int getX() {
         return x;

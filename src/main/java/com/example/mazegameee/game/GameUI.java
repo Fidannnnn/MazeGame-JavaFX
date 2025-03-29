@@ -55,6 +55,7 @@ public class GameUI {
 
     public GameUI(int gridSize) {
         mainLayout = new BorderPane();
+
         statsPanel = new HBox(20);
         statsPanel.setAlignment(Pos.CENTER);
 
@@ -64,16 +65,35 @@ public class GameUI {
         statsPanel.getChildren().addAll(healthLabel, keysLabel, crowbarsLabel);
 
         mainLayout.setTop(statsPanel);
+
         gridPane = new GridPane();
         mainLayout.setCenter(gridPane);
-        drawGrid(gridSize);
+
+        drawGrid(gridSize); // ✅ this initializes roomGrid BEFORE you use it
+
+        Room entrance = roomGrid[0][0];
+        Room exit;
+
+        // Pick a random exit that is not the entrance
+        do {
+            int exitRow = random.nextInt(gridSize);
+            int exitCol = random.nextInt(gridSize);
+            exit = roomGrid[exitRow][exitCol];
+        } while (exit == entrance);
+
+        Set<Room> exits = new HashSet<>();
+        exits.add(exit);
+
         addDoors(roomGrid);
+
+        markExit(exit); // Optional: visually show the exit cell
         addChest(gridSize);
         addHero();
         addNPC();
         updateStats();
         startNPCMovement();
     }
+
 
     private void drawGrid(int size) {
         roomGrid = new Room[size][size];
@@ -118,6 +138,16 @@ public class GameUI {
         gridPane.add(roomImage, col, row);
     }
 
+    private void markExit(Room exit) {
+        Rectangle marker = new Rectangle(CELL_SIZE, CELL_SIZE);
+        marker.setFill(Color.LIMEGREEN); // 💚 Mark exit
+
+        StackPane markerPane = new StackPane(marker);
+        markerPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+
+        gridPane.add(markerPane, exit.getX(), exit.getY());
+    }
+
 
     private void addHero() {
         Image heroIcon = new Image("hero.png");
@@ -140,22 +170,25 @@ public class GameUI {
     public void handleKeyPress(KeyEvent event) {
         switch (event.getCode()) {
             case UP, DOWN -> {
-                if (isHeroOnRight) {
-                    moveHero(heroRow + (event.getCode() == KeyCode.UP ? -1 : 1), heroCol, Pos.BOTTOM_RIGHT);
-                } else {
-                    moveHero(heroRow + (event.getCode() == KeyCode.UP ? -1 : 1), heroCol, Pos.BOTTOM_LEFT);
-                }
+                Pos alignment = isHeroOnRight ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT;
+                moveHero(heroRow + (event.getCode() == KeyCode.UP ? -1 : 1), heroCol, alignment);
             }
             case LEFT -> {
-                isHeroOnRight = false; // Moving left, so align to bottom-left
+                isHeroOnRight = false;
                 moveHero(heroRow, heroCol - 1, Pos.BOTTOM_LEFT);
             }
             case RIGHT -> {
-                isHeroOnRight = true; // Moving right, so align to bottom-right
+                isHeroOnRight = true;
                 moveHero(heroRow, heroCol + 1, Pos.BOTTOM_RIGHT);
             }
+            // Door interactions:
+            case W -> tryUnlockDoorInDirection(-1, 0); // up
+            case A -> tryUnlockDoorInDirection(0, -1); // left
+            case S -> tryUnlockDoorInDirection(1, 0);  // down
+            case D -> tryUnlockDoorInDirection(0, 1);  // right
         }
     }
+
 
     private void moveHero(int newRow, int newCol, Pos alignment) {
         if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 10) {
@@ -306,20 +339,73 @@ public class GameUI {
         }
     }
 
+    private void tryUnlockDoorInDirection(int rowOffset, int colOffset) {
+        int newRow = heroRow + rowOffset;
+        int newCol = heroCol + colOffset;
+
+        if (newRow < 0 || newRow >= roomGrid.length || newCol < 0 || newCol >= roomGrid[0].length)
+            return;
+
+        Room currentRoom = roomGrid[heroRow][heroCol];
+        Room adjacentRoom = roomGrid[newRow][newCol];
+
+        for (Door door : currentRoom.getDoors()) {
+            if (door.getRooms().contains(adjacentRoom)) {
+                if (door.isLocked()) {
+                    if (hero.getNumOfKeys() > 0) {
+                        hero.addNumOfKeys(-1);
+                        door.setLocked(false);
+                        door.updateVisual();
+                        updateStats();
+                        System.out.println("Unlocked Door " + door.getDoorID() + " with a key!");
+                        // Optionally refresh visual here if needed
+                    } else {
+                        System.out.println("Door is locked. You need a key.");
+                    }
+                } else {
+                    System.out.println("Door " + door.getDoorID() + " is already open.");
+                }
+                return; // Once a matching door is found, we’re done
+            }
+        }
+
+        System.out.println("No door in that direction.");
+    }
+
+
 
     private void addDoorVisual(Door door, boolean vertical) {
+        // Create door rectangle (visual representation)
         Rectangle doorRect = vertical
                 ? new Rectangle(5, CELL_SIZE)
                 : new Rectangle(CELL_SIZE, 5);
 
         doorRect.setFill(door.isLocked() ? Color.DARKRED : Color.SADDLEBROWN);
+        doorRect.setMouseTransparent(false); // allow interaction
 
+        door.setVisual(doorRect); // ✅ Link visual to door
+
+        StackPane doorPane = getStackPane(door, doorRect);
+
+        // Set door position in grid
+        if (vertical) {
+            GridPane.setColumnIndex(doorPane, door.getX());
+            GridPane.setRowIndex(doorPane, door.getY());
+            GridPane.setColumnSpan(doorPane, 2); // door spans two columns horizontally
+        } else {
+            GridPane.setColumnIndex(doorPane, door.getX());
+            GridPane.setRowIndex(doorPane, door.getY());
+            GridPane.setRowSpan(doorPane, 2); // door spans two rows vertically
+        }
+
+        gridPane.getChildren().add(doorPane);
+    }
+
+    private StackPane getStackPane(Door door, Rectangle doorRect) {
         StackPane doorPane = new StackPane(doorRect);
-        doorPane.setMouseTransparent(false); // allow interaction
 
-        // Handle clicks on the door
+        // Handle clicks on the door (optional now since W/A/S/D handles interaction)
         doorPane.setOnMouseClicked(event -> {
-            // Check if hero is adjacent to either connected room
             Room room1 = door.getRooms().get(0);
             Room room2 = door.getRooms().get(1);
             boolean heroNearby = (heroRow == room1.getY() && heroCol == room1.getX()) ||
@@ -330,9 +416,9 @@ public class GameUI {
                     if (hero.getNumOfKeys() > 0) {
                         hero.addNumOfKeys(-1);
                         door.setLocked(false);
+                        door.updateVisual(); // ✅ Update color
+                        updateStats();
                         System.out.println("You unlocked Door " + door.getDoorID());
-                        doorRect.setFill(Color.SADDLEBROWN); // visually unlocked
-                        updateStats(); // update top panel
                     } else {
                         System.out.println("Door is locked. You need a key.");
                     }
@@ -343,22 +429,8 @@ public class GameUI {
                 System.out.println("You must be next to the door to interact.");
             }
         });
-
-        // Set location in grid
-        if (vertical) {
-            GridPane.setColumnIndex(doorPane, door.getX());
-            GridPane.setRowIndex(doorPane, door.getY());
-            GridPane.setColumnSpan(doorPane, 2);
-        } else {
-            GridPane.setColumnIndex(doorPane, door.getX());
-            GridPane.setRowIndex(doorPane, door.getY());
-            GridPane.setRowSpan(doorPane, 2);
-        }
-
-        gridPane.getChildren().add(doorPane);
+        return doorPane;
     }
-
-
 
 
 
