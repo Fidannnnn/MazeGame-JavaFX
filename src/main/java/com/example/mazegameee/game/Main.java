@@ -5,20 +5,25 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-    private static final int GRID_SIZE = 10; // 10x10 maze
     private GameUI gameUI;
 
     @Override
     public void start(Stage primaryStage) {
-        gameUI = new GameUI(GRID_SIZE);
-        Scene scene = gameUI.getScene(); // ✅ use full layout with stats panel
+        try {
+            GameUI gameUI = new GameUI();
+            Scene scene = gameUI.getScene();
 
-        primaryStage.setTitle("Maze Game");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+            primaryStage.setTitle("Maze Game");
+            primaryStage.setScene(scene);
+            primaryStage.show();
 
-        scene.setOnKeyPressed(event -> gameUI.handleKeyPress(event));
+            scene.setOnKeyPressed(gameUI::handleKeyPress);
+
+        } catch (Exception e) {
+            e.printStackTrace(); // 🔥 will show real cause in terminal
+        }
     }
+
 
     public static void main(String[] args) {
         launch(args);

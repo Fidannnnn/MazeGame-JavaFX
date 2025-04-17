@@ -2,6 +2,7 @@ package com.example.mazegameee.structures;
 
 import com.example.mazegameee.behaviours.Activable;
 import com.example.mazegameee.entities.StructuralElements;
+import com.example.mazegameee.objects.Lock;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -9,26 +10,25 @@ import java.util.ArrayList;
 
 public class Door extends StructuralElements implements Activable {
     private int doorID;
-    private boolean locked;
+    private Lock lock;
     private Room room1, room2;
     private Rectangle visual;
-
 
     public Door(int x, int y, int doorID, boolean locked, Room room1, Room room2) {
         super(x, y);
         this.doorID = doorID;
-        this.locked = locked;
+        this.lock = new Lock(x, y, doorID); // Create a lock with same ID and position
+        this.lock.setLocked(locked);       // Set initial lock state
         this.room1 = room1;
         this.room2 = room2;
 
-        // Add this door to both rooms
         if (room1 != null) room1.addDoor(this);
         if (room2 != null) room2.addDoor(this);
     }
 
     @Override
     public void activate() {
-        if (locked) {
+        if (lock.isLocked()) {
             System.out.println("Door " + doorID + " is locked!");
         } else {
             System.out.println("Door " + doorID + " is now open!");
@@ -41,18 +41,23 @@ public class Door extends StructuralElements implements Activable {
 
     public void setDoorID(int doorID) {
         this.doorID = doorID;
+        if (lock != null) lock.setLockID(doorID);
     }
 
     public boolean isLocked() {
-        return locked;
+        return lock != null && lock.isLocked();
     }
 
     public void setLocked(boolean locked) {
-        this.locked = locked;
+        if (lock != null) lock.setLocked(locked);
+    }
+
+    public Lock getLock() {
+        return lock;
     }
 
     public ArrayList<Room> getRooms() {
-        return new ArrayList<Room>() {{
+        return new ArrayList<>() {{
             add(room1);
             add(room2);
         }};
@@ -64,7 +69,6 @@ public class Door extends StructuralElements implements Activable {
         return null;
     }
 
-
     public void setVisual(Rectangle visual) {
         this.visual = visual;
     }
@@ -74,7 +78,6 @@ public class Door extends StructuralElements implements Activable {
             visual.setFill(isLocked() ? Color.DARKRED : Color.SADDLEBROWN);
         }
     }
-
 
     public int getX() {
         return x;

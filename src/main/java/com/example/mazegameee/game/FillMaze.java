@@ -1,0 +1,166 @@
+package com.example.mazegameee.game;
+
+import com.example.mazegameee.LivingBeings.Hero;
+import com.example.mazegameee.LivingBeings.Npc;
+import com.example.mazegameee.entities.Objects;
+import com.example.mazegameee.objects.Chest;
+import com.example.mazegameee.structures.Door;
+import com.example.mazegameee.structures.Room;
+import javafx.geometry.Pos;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class FillMaze {
+    private final GridPane gridPane;
+    private final Room[][] worldGrid;
+    private final List<Npc> npcs;
+    private final Hero hero;
+    private final int CELL_SIZE;
+
+    public FillMaze(GridPane gridPane, Room[][] worldGrid, List<Npc> npcs, Hero hero, int CELL_SIZE) {
+        this.gridPane = gridPane;
+        this.worldGrid = worldGrid;
+        this.npcs = npcs;
+        this.hero = hero;
+        this.CELL_SIZE = CELL_SIZE;
+    }
+
+    public void drawRooms() {
+        for (int row = 0; row < worldGrid.length; row++) {
+            for (int col = 0; col < worldGrid[0].length; col++) {
+                Room room = new Room(col, row, row * worldGrid.length + col, new ArrayList<>(), new ArrayList<>());
+                worldGrid[row][col] = room;
+
+                Image roomIcon = new Image("room.jpeg");
+                ImageView roomImage = new ImageView(roomIcon);
+                roomImage.setFitWidth(CELL_SIZE);
+                roomImage.setFitHeight(CELL_SIZE);
+                gridPane.add(roomImage, col, row);
+            }
+        }
+    }
+
+    public void markExit(Room exit) {
+        Rectangle marker = new Rectangle(CELL_SIZE, CELL_SIZE);
+        marker.setFill(Color.LIMEGREEN);
+        StackPane markerPane = new StackPane(marker);
+        markerPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+        gridPane.add(markerPane, exit.getX(), exit.getY());
+    }
+
+    public void addHeroVisual(int row, int col, ImageView heroImage) {
+        StackPane heroPane = new StackPane(heroImage);
+        heroPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+        heroPane.setAlignment(Pos.BOTTOM_RIGHT);
+        gridPane.add(heroPane, col, row);
+    }
+
+    public void addNPCs(int count, int heroRow, int heroCol) {
+        Random random = new Random();
+        int placed = 0;
+
+        while (placed < count) {
+            int row = random.nextInt(worldGrid.length);
+            int col = random.nextInt(worldGrid[0].length);
+
+            if (row == heroRow && col == heroCol) continue;
+
+            Npc npc = new Npc(col, row, 10);
+            npcs.add(npc);
+
+            Image npcIcon = new Image("npc.png");
+            ImageView npcImage = new ImageView(npcIcon);
+            npcImage.setFitWidth(CELL_SIZE / 2);
+            npcImage.setFitHeight(CELL_SIZE / 2);
+
+            StackPane npcPane = new StackPane(npcImage);
+            npcPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+            npcPane.setMouseTransparent(true);
+            npc.setVisual(npcPane);
+
+            gridPane.add(npcPane, col, row);
+            placed++;
+        }
+    }
+
+    public void addChest(int count, int heroRow, int heroCol) {
+        Random random = new Random();
+        int placed = 0;
+
+        while (placed < count) {
+            int row = random.nextInt(worldGrid.length);
+            int col = random.nextInt(worldGrid[0].length);
+
+            if (row == heroRow && col == heroCol) continue;
+            boolean npcThere = npcs.stream().anyMatch(n -> n.getX() == col && n.getY() == row);
+            if (npcThere) continue;
+
+            Chest chest = new Chest(col, row, true);
+            worldGrid[row][col].getObjects().add(chest);
+
+            Rectangle rect = new Rectangle(CELL_SIZE / 2.0, CELL_SIZE / 2.0);
+            rect.setFill(Color.GOLD);
+
+            StackPane chestPane = new StackPane(rect);
+            chestPane.setId("chest");
+            chestPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+            chestPane.setAlignment(Pos.TOP_RIGHT);
+
+            gridPane.add(chestPane, col, row);
+            placed++;
+        }
+    }
+
+    public void addDoors(int spacing) {
+        int id = 1;
+        Random random = new Random();
+
+        for (int row = 0; row < worldGrid.length; row++) {
+            for (int col = 0; col < worldGrid[0].length; col++) {
+                Room current = worldGrid[row][col];
+
+                if (col < worldGrid[0].length - 1) {
+                    Room right = worldGrid[row][col + 1];
+                    boolean locked = random.nextBoolean();
+                    Door door = new Door(col, row, id++, locked, current, right);
+                    addDoorVisual(door, true);
+                }
+
+                if (row < worldGrid.length - 1) {
+                    Room down = worldGrid[row + 1][col];
+                    boolean locked = random.nextBoolean();
+                    Door door = new Door(col, row, id++, locked, current, down);
+                    addDoorVisual(door, false);
+                }
+            }
+        }
+    }
+
+    private void addDoorVisual(Door door, boolean vertical) {
+        Rectangle doorRect = vertical ? new Rectangle(5, CELL_SIZE) : new Rectangle(CELL_SIZE, 5);
+        doorRect.setFill(door.isLocked() ? Color.DARKRED : Color.SADDLEBROWN);
+        doorRect.setMouseTransparent(false);
+        door.setVisual(doorRect);
+
+        StackPane doorPane = new StackPane(doorRect);
+        if (vertical) {
+            GridPane.setColumnIndex(doorPane, door.getX());
+            GridPane.setRowIndex(doorPane, door.getY());
+            GridPane.setColumnSpan(doorPane, 2);
+        } else {
+            GridPane.setColumnIndex(doorPane, door.getX());
+            GridPane.setRowIndex(doorPane, door.getY());
+            GridPane.setRowSpan(doorPane, 2);
+        }
+
+        gridPane.getChildren().add(doorPane);
+    }
+}

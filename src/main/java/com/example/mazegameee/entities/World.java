@@ -1,37 +1,28 @@
 package com.example.mazegameee.entities;
 
-import com.example.mazegameee.structures.Room;
-
-import java.util.ArrayList;
-
 public class World {
-    // so our world has living beings and structure
-    // the structure is rooms but also doors???
-    // every door has 2 rooms
-    // lets make world a list of live beings and list of rooms
+    public int x;
+    public int y;
 
-    private ArrayList<LivingBeings> livingBeings;
-    private ArrayList<Room> rooms;
-
-    public World() {
-        this.livingBeings = new ArrayList<>();
-        this.rooms = new ArrayList<>();
+    public World(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 
-    public ArrayList<LivingBeings> getLivingBeings() {
-        return livingBeings;
+    public int getX() {
+        return x;
     }
 
-    public void addLivingBeings(LivingBeings livingBeing) {
-        livingBeings.add(livingBeing);
+    public void setX(int x) {
+        this.x = x;
     }
 
-    public ArrayList<Room> getRooms() {
-        return rooms;
+    public int getY() {
+        return y;
     }
 
-    public void addRooms(Room room) {
-        rooms.add(room);
+    public void setY(int y) {
+        this.y = y;
     }
 
 }

@@ -1,0 +1,167 @@
+package com.example.mazegameee.game;
+
+import com.example.mazegameee.LivingBeings.Hero;
+import com.example.mazegameee.LivingBeings.Npc;
+import com.example.mazegameee.entities.Objects;
+import com.example.mazegameee.objects.*;
+import com.example.mazegameee.structures.Door;
+import com.example.mazegameee.structures.Room;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+
+import java.util.List;
+
+public class GameController {
+    private final Room[][] worldGrid;
+    private final List<Npc> npcs;
+    private final Hero hero;
+    private final GridPane gridPane;
+    private final Label healthLabel;
+    private final Label keysLabel;
+    private final Label crowbarsLabel;
+    private final int CELL_SIZE;
+
+    public GameController(Room[][] worldGrid, List<Npc> npcs, Hero hero,
+                          GridPane gridPane, Label healthLabel,
+                          Label keysLabel, Label crowbarsLabel, int cellSize) {
+        this.worldGrid = worldGrid;
+        this.npcs = npcs;
+        this.hero = hero;
+        this.gridPane = gridPane;
+        this.healthLabel = healthLabel;
+        this.keysLabel = keysLabel;
+        this.crowbarsLabel = crowbarsLabel;
+        this.CELL_SIZE = cellSize;
+    }
+
+    public void updateStats() {
+        healthLabel.setText("Health: " + hero.getHealth());
+        keysLabel.setText("Keys: " + hero.getNumOfKeys());
+        crowbarsLabel.setText("Crowbars: " + hero.getNumOfCrowbars());
+    }
+
+    public boolean moveHero(int newRow, int newCol, int heroRow, int heroCol, ImageView heroImage, Pos alignment) {
+        if (newRow < 0 || newRow >= worldGrid.length || newCol < 0 || newCol >= worldGrid[0].length) return false;
+
+        Room currentRoom = worldGrid[heroRow][heroCol];
+        Room targetRoom = worldGrid[newRow][newCol];
+
+        if (!currentRoom.isConnectedTo(targetRoom)) {
+            System.out.println("No unlocked door between current room and target room.");
+            return false;
+        }
+
+        // Remove hero image from current cell
+        gridPane.getChildren().removeIf(node ->
+                GridPane.getColumnIndex(node) != null &&
+                        GridPane.getRowIndex(node) != null &&
+                        GridPane.getColumnIndex(node) == heroCol &&
+                        GridPane.getRowIndex(node) == heroRow &&
+                        node instanceof StackPane &&
+                        ((StackPane) node).getChildren().contains(heroImage)
+        );
+
+        // Update hero's position
+        hero.setX(newCol);
+        hero.setY(newRow);
+
+        // Add hero to new position
+        StackPane newHeroPane = new StackPane(heroImage);
+        newHeroPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+        newHeroPane.setAlignment(alignment);
+        newHeroPane.setMouseTransparent(true);
+        gridPane.add(newHeroPane, newCol, newRow);
+
+        return true;
+    }
+
+    public void tryUnlockDoorInDirection(int heroRow, int heroCol, int rowOffset, int colOffset) {
+        int newRow = heroRow + rowOffset;
+        int newCol = heroCol + colOffset;
+
+        if (newRow < 0 || newRow >= worldGrid.length || newCol < 0 || newCol >= worldGrid[0].length)
+            return;
+
+        Room currentRoom = worldGrid[heroRow][heroCol];
+        Room adjacentRoom = worldGrid[newRow][newCol];
+
+        for (Door door : currentRoom.getDoors()) {
+            if (door.getRooms().contains(adjacentRoom)) {
+                if (door.isLocked()) {
+                    if (hero.getNumOfKeys() > 0) {
+                        hero.addNumOfKeys(-1);
+                        door.setLocked(false);
+                        door.updateVisual();
+                        updateStats();
+                        System.out.println("Unlocked Door " + door.getDoorID() + " with a key!");
+                    } else {
+                        System.out.println("Door is locked. You need a key.");
+                    }
+                } else {
+                    System.out.println("Door " + door.getDoorID() + " is already open.");
+                }
+                return;
+            }
+        }
+        System.out.println("No door in that direction.");
+    }
+
+    public void tryOpenChest(Chest chest, int heroRow, int heroCol) {
+        if (chest.getX() == heroCol && chest.getY() == heroRow) {
+            if (chest.unlock(hero)) {
+                List<Objects> items = chest.getItems();
+                for (Objects item : items) {
+                    if (item instanceof Key) hero.addNumOfKeys(1);
+                    else if (item instanceof Crowbar) hero.addNumOfCrowbars(1);
+                    else if (item instanceof HealthPotion hp) hero.addHealth(hp.getHealthPoints());
+                }
+
+                // Remove the chest from the room's object list
+                worldGrid[heroRow][heroCol].getObjects().remove(chest);
+
+                // Remove the chest visual from the grid
+                gridPane.getChildren().removeIf(node ->
+                        GridPane.getColumnIndex(node) != null &&
+                                GridPane.getRowIndex(node) != null &&
+                                GridPane.getColumnIndex(node) == heroCol &&
+                                GridPane.getRowIndex(node) == heroRow &&
+                                node instanceof StackPane &&
+                                "chest".equals(((StackPane) node).getId())
+                );
+
+
+                updateStats();
+                System.out.println("Chest items added to the hero!");
+            }
+        } else {
+            System.out.println("You must stand on the chest to open it.");
+        }
+    }
+
+
+    public Chest getChestAt(int col, int row) {
+        Room currentRoom = worldGrid[row][col];
+        for (Objects obj : currentRoom.getObjects()) {
+            if (obj instanceof Chest chest && chest.getX() == col && chest.getY() == row) {
+                return chest;
+            }
+        }
+        return null;
+    }
+
+    public void moveNPCs() {
+        for (Npc npc : npcs) {
+            gridPane.getChildren().remove(npc.getVisual());
+            npc.moveRandomly(worldGrid.length);
+            gridPane.add(npc.getVisual(), npc.getX(), npc.getY());
+        }
+        updateStats();
+    }
+
+    public Room[][] getWorldGrid() {
+        return worldGrid;
+    }
+}

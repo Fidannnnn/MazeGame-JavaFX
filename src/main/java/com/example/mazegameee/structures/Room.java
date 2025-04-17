@@ -1,16 +1,14 @@
 package com.example.mazegameee.structures;
 
-import com.example.mazegameee.behaviours.Activable;
 import com.example.mazegameee.entities.Objects;
 import com.example.mazegameee.entities.StructuralElements;
 
 import java.util.ArrayList;
 
-public class Room extends StructuralElements implements Activable {
+public class Room extends StructuralElements{
     private int roomID;
     private ArrayList<Objects> objects;
     private ArrayList<Door> doors;
-    private boolean locked;
 
     public Room(int x, int y, int roomID, ArrayList<Objects> objects, ArrayList<Door> doors) {
         super(x, y);
@@ -19,21 +17,17 @@ public class Room extends StructuralElements implements Activable {
         this.doors = (doors != null) ? doors : new ArrayList<>();
     }
 
-    @Override
-    public void activate() {
-        if (locked) {
-            System.out.println("Room " + roomID + " is locked!");
-        } else {
-            System.out.println("Room " + roomID + " is now open!");
-        }
-    }
+
 
     public ArrayList<Objects> getObjects() {
         return objects;
     }
 
-    public void addGameElements(ArrayList<Objects> objects) {
-        this.objects = objects;
+    public void addObject(Objects object) {
+        if (this.objects == null) {
+            this.objects = new ArrayList<>();
+        }
+        this.objects.add(object);
     }
 
     public int getRoomID() {
