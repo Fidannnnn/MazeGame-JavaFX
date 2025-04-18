@@ -40,7 +40,7 @@ public class GameUI {
 
     private boolean isHeroOnRight = false;
     private final static int GRID_SIZE = 10;
-    private final static int CELL_SIZE = 50;
+    private final static int CELL_SIZE = 75;
 
     public GameUI() {
         mainLayout = new BorderPane();
@@ -61,8 +61,8 @@ public class GameUI {
         hero = new Hero(0, 0, 100, 100);
 
         heroImage = new ImageView(new Image("hero.png"));
-        heroImage.setFitWidth(CELL_SIZE / 2);
-        heroImage.setFitHeight(CELL_SIZE / 2);
+        heroImage.setFitWidth(CELL_SIZE / 3);
+        heroImage.setFitHeight(CELL_SIZE / 3);
         heroImage.setMouseTransparent(true);
 
         fillMaze = new FillMaze(gridPane, worldGrid, npcs, hero, CELL_SIZE);
@@ -79,12 +79,13 @@ public class GameUI {
         Room exit;
         Random random = new Random();
         do {
-            int exitRow = random.nextInt(GRID_SIZE);
-            int exitCol = random.nextInt(GRID_SIZE);
+            int exitRow = GRID_SIZE - 1;
+            int exitCol = GRID_SIZE - 1;
             exit = worldGrid[exitRow][exitCol];
         } while (exit == entrance);
 
         fillMaze.markExit(exit);
+        gameController.setExitCoordinates(exit.getY(), exit.getX());
         fillMaze.addHeroVisual(0, 0, heroImage);
         fillMaze.addNPCs(10, 0, 0);
         fillMaze.addChest(20, 0, 0);

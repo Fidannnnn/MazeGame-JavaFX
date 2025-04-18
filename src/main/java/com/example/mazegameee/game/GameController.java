@@ -7,6 +7,7 @@ import com.example.mazegameee.objects.*;
 import com.example.mazegameee.structures.Door;
 import com.example.mazegameee.structures.Room;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -23,6 +24,10 @@ public class GameController {
     private final Label keysLabel;
     private final Label crowbarsLabel;
     private final int CELL_SIZE;
+
+    private int exitRow;
+    private int exitCol;
+
 
     public GameController(Room[][] worldGrid, List<Npc> npcs, Hero hero,
                           GridPane gridPane, Label healthLabel,
@@ -68,6 +73,22 @@ public class GameController {
         hero.setX(newCol);
         hero.setY(newRow);
 
+        // After updating hero's position and adding visual
+        if (hero.getY() == exitRow && hero.getX() == exitCol) {
+            javafx.application.Platform.runLater(() -> {
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+                alert.setTitle("Victory");
+                alert.setHeaderText(null);
+                alert.setContentText("You reached the exit. You win!");
+                alert.showAndWait();  // Wait until alert is closed
+
+                // Close the application
+                javafx.application.Platform.exit();
+                System.exit(0); // Ensures JVM stops
+            });
+        }
+
+
         // Add hero to new position
         StackPane newHeroPane = new StackPane(heroImage);
         newHeroPane.setPrefSize(CELL_SIZE, CELL_SIZE);
@@ -76,6 +97,11 @@ public class GameController {
         gridPane.add(newHeroPane, newCol, newRow);
 
         return true;
+    }
+
+    public void setExitCoordinates(int row, int col) {
+        this.exitRow = row;
+        this.exitCol = col;
     }
 
     public void tryUnlockDoorInDirection(int heroRow, int heroCol, int rowOffset, int colOffset) {
@@ -141,7 +167,6 @@ public class GameController {
         }
     }
 
-
     public Chest getChestAt(int col, int row) {
         Room currentRoom = worldGrid[row][col];
         for (Objects obj : currentRoom.getObjects()) {
@@ -154,10 +179,24 @@ public class GameController {
 
     public void moveNPCs() {
         for (Npc npc : npcs) {
+            int oldX = npc.getX();
+            int oldY = npc.getY();
+
             gridPane.getChildren().remove(npc.getVisual());
+
+            // Try to move, but restore if target is the exit
             npc.moveRandomly(worldGrid.length);
+
+            // If NPC lands in the exit cell, cancel move
+            if (npc.getX() == CELL_SIZE - 1 &&
+                    npc.getY() == CELL_SIZE - 1) {
+                npc.setX(oldX);
+                npc.setY(oldY);
+            }
+
             gridPane.add(npc.getVisual(), npc.getX(), npc.getY());
         }
+
         updateStats();
     }
 

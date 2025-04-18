@@ -49,11 +49,15 @@ public class FillMaze {
     }
 
     public void markExit(Room exit) {
-        Rectangle marker = new Rectangle(CELL_SIZE, CELL_SIZE);
-        marker.setFill(Color.LIMEGREEN);
-        StackPane markerPane = new StackPane(marker);
-        markerPane.setPrefSize(CELL_SIZE, CELL_SIZE);
-        gridPane.add(markerPane, exit.getX(), exit.getY());
+        ImageView exitImage = new ImageView(new Image("exit.png"));
+        exitImage.setFitWidth(CELL_SIZE);
+        exitImage.setFitHeight(CELL_SIZE);
+
+        StackPane exitPane = new StackPane(exitImage);
+        exitPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+        exitPane.setAlignment(Pos.CENTER);
+
+        gridPane.add(exitPane, exit.getX(), exit.getY());
     }
 
     public void addHeroVisual(int row, int col, ImageView heroImage) {
@@ -78,8 +82,8 @@ public class FillMaze {
 
             Image npcIcon = new Image("npc.png");
             ImageView npcImage = new ImageView(npcIcon);
-            npcImage.setFitWidth(CELL_SIZE / 2);
-            npcImage.setFitHeight(CELL_SIZE / 2);
+            npcImage.setFitWidth(CELL_SIZE / 3);
+            npcImage.setFitHeight(CELL_SIZE / 3);
 
             StackPane npcPane = new StackPane(npcImage);
             npcPane.setPrefSize(CELL_SIZE, CELL_SIZE);
@@ -106,7 +110,7 @@ public class FillMaze {
             Chest chest = new Chest(col, row, true);
             worldGrid[row][col].getObjects().add(chest);
 
-            Rectangle rect = new Rectangle(CELL_SIZE / 2.0, CELL_SIZE / 2.0);
+            Rectangle rect = new Rectangle(CELL_SIZE / 3, CELL_SIZE / 3);
             rect.setFill(Color.GOLD);
 
             StackPane chestPane = new StackPane(rect);
@@ -145,12 +149,26 @@ public class FillMaze {
     }
 
     private void addDoorVisual(Door door, boolean vertical) {
-        Rectangle doorRect = vertical ? new Rectangle(5, CELL_SIZE) : new Rectangle(CELL_SIZE, 5);
+        Rectangle wallRect = vertical ? new Rectangle(5, CELL_SIZE) : new Rectangle(CELL_SIZE, 5);
+        wallRect.setFill(Color.DARKSLATEGRAY);
+        Rectangle doorRect = vertical ? new Rectangle(5, CELL_SIZE/3) : new Rectangle(CELL_SIZE/3, 5);
         doorRect.setFill(door.isLocked() ? Color.DARKRED : Color.SADDLEBROWN);
         doorRect.setMouseTransparent(false);
         door.setVisual(doorRect);
 
+        StackPane wallPane = new StackPane(wallRect);
         StackPane doorPane = new StackPane(doorRect);
+
+        if (vertical) {
+            GridPane.setColumnIndex(wallPane, door.getX());
+            GridPane.setRowIndex(wallPane, door.getY());
+            GridPane.setColumnSpan(wallPane, 2);
+        } else {
+            GridPane.setColumnIndex(wallPane, door.getX());
+            GridPane.setRowIndex(wallPane, door.getY());
+            GridPane.setRowSpan(wallPane, 2);
+        }
+
         if (vertical) {
             GridPane.setColumnIndex(doorPane, door.getX());
             GridPane.setRowIndex(doorPane, door.getY());
@@ -160,7 +178,7 @@ public class FillMaze {
             GridPane.setRowIndex(doorPane, door.getY());
             GridPane.setRowSpan(doorPane, 2);
         }
-
+        gridPane.getChildren().add(wallPane);
         gridPane.getChildren().add(doorPane);
     }
 }
