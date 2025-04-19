@@ -26,20 +26,32 @@ public class LivingBeings extends World implements Executable {
         }
     }
 
-    public void die(){
-        System.out.println("dead");
-    };
+    public void die() {
+        System.out.println(this.getClass().getSimpleName() + " died!");
+    }
 
 
     @Override
-    public void execute() {
-
+    public void execute(LivingBeings target) {
+        if (target.getX() == this.x && target.getY() == this.y) {
+            attack(target);  // NPC attacks hero
+        }
     }
+
+
     public int getX(){
         return x;
     }
     public int getY(){
         return y;
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
+    }
+
+    public int getHealth() {
+        return health;
     }
     // attack()
     // hero npc classes

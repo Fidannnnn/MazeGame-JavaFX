@@ -12,10 +12,6 @@ public class Hero extends LivingBeings {
         return strength;
     }
 
-    public int getHealth() {
-        return health;
-    }
-
     public int getNumOfKeys() {
         return numOfKeys;
     }

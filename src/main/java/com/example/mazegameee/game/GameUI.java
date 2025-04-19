@@ -28,6 +28,8 @@ public class GameUI {
     private final Label healthLabel;
     private final Label keysLabel;
     private final Label crowbarsLabel;
+    private Label enemyHealthLabel;
+
 
     private final Room[][] worldGrid;
     private final List<Npc> npcs;
@@ -50,7 +52,8 @@ public class GameUI {
         healthLabel = new Label();
         keysLabel = new Label();
         crowbarsLabel = new Label();
-        statsPanel.getChildren().addAll(healthLabel, keysLabel, crowbarsLabel);
+        enemyHealthLabel = new Label();
+        statsPanel.getChildren().addAll(healthLabel, keysLabel, crowbarsLabel, enemyHealthLabel);
         mainLayout.setTop(statsPanel);
 
         gridPane = new GridPane();
@@ -66,7 +69,7 @@ public class GameUI {
         heroImage.setMouseTransparent(true);
 
         fillMaze = new FillMaze(gridPane, worldGrid, npcs, hero, CELL_SIZE);
-        gameController = new GameController(worldGrid, npcs, hero, gridPane, healthLabel, keysLabel, crowbarsLabel, CELL_SIZE);
+        gameController = new GameController(worldGrid, npcs, hero, gridPane, healthLabel, keysLabel, crowbarsLabel, enemyHealthLabel, CELL_SIZE);
         keyHandler = new KeyHandler(hero, 0, 0, heroImage, gameController, CELL_SIZE);
 
         setupGame();

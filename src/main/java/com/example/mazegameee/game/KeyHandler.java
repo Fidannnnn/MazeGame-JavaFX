@@ -1,6 +1,7 @@
 package com.example.mazegameee.game;
 
 import com.example.mazegameee.LivingBeings.Hero;
+import com.example.mazegameee.LivingBeings.Npc;
 import com.example.mazegameee.objects.Chest;
 import javafx.geometry.Pos;
 import javafx.scene.image.ImageView;
@@ -55,6 +56,18 @@ public class KeyHandler {
                     controller.tryOpenChest(chest, heroRow, heroCol);
                 }
             }
+            case F -> {
+                Npc target = controller.getNpcAt(hero.getX(), hero.getY());
+                if (target != null) {
+                    hero.attack(target);
+                    controller.updateStats();
+                    if (target.getHealth() <= 0) {
+                        controller.removeNpc(target);
+                    }
+                }
+
+            }
+
         }
     }
 

@@ -77,7 +77,7 @@ public class FillMaze {
 
             if (row == heroRow && col == heroCol) continue;
 
-            Npc npc = new Npc(col, row, 10);
+            Npc npc = new Npc(col, row, 50);
             npcs.add(npc);
 
             Image npcIcon = new Image("npc.png");

@@ -6,6 +6,7 @@ import com.example.mazegameee.entities.Objects;
 import com.example.mazegameee.objects.*;
 import com.example.mazegameee.structures.Door;
 import com.example.mazegameee.structures.Room;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -23,6 +24,7 @@ public class GameController {
     private final Label healthLabel;
     private final Label keysLabel;
     private final Label crowbarsLabel;
+    private final Label enemyHealthLabel;
     private final int CELL_SIZE;
 
     private int exitRow;
@@ -31,7 +33,7 @@ public class GameController {
 
     public GameController(Room[][] worldGrid, List<Npc> npcs, Hero hero,
                           GridPane gridPane, Label healthLabel,
-                          Label keysLabel, Label crowbarsLabel, int cellSize) {
+                          Label keysLabel, Label crowbarsLabel, Label enemyHealthLabel, int cellSize) {
         this.worldGrid = worldGrid;
         this.npcs = npcs;
         this.hero = hero;
@@ -39,14 +41,30 @@ public class GameController {
         this.healthLabel = healthLabel;
         this.keysLabel = keysLabel;
         this.crowbarsLabel = crowbarsLabel;
+        this.enemyHealthLabel = enemyHealthLabel;
         this.CELL_SIZE = cellSize;
     }
 
     public void updateStats() {
+
         healthLabel.setText("Health: " + hero.getHealth());
         keysLabel.setText("Keys: " + hero.getNumOfKeys());
         crowbarsLabel.setText("Crowbars: " + hero.getNumOfCrowbars());
+
+        // Fix this logic
+        boolean enemyFound = false;
+        for (Npc npc : npcs) {
+            if (hero.getX() == npc.getX() && hero.getY() == npc.getY()) {
+                enemyHealthLabel.setText("Enemy HP: " + npc.getHealth());
+                enemyFound = true;
+                break;
+            }
+        }
+        if (!enemyFound) {
+            enemyHealthLabel.setText("Enemy HP: 0");
+        }
     }
+
 
     public boolean moveHero(int newRow, int newCol, int heroRow, int heroCol, ImageView heroImage, Pos alignment) {
         if (newRow < 0 || newRow >= worldGrid.length || newCol < 0 || newCol >= worldGrid[0].length) return false;
@@ -177,10 +195,33 @@ public class GameController {
         return null;
     }
 
+    public Npc getNpcAt(int x, int y) {
+        for (Npc npc : npcs) {
+            if (npc.getX() == x && npc.getY() == y) {
+                return npc;
+            }
+        }
+        return null;
+    }
+
+
+
+    public void removeNpc(Npc npc) {
+        gridPane.getChildren().remove(npc.getVisual());
+        npcs.remove(npc);
+    }
+
+
     public void moveNPCs() {
         for (Npc npc : npcs) {
             int oldX = npc.getX();
             int oldY = npc.getY();
+
+            // If NPC is in same cell as hero, skip movement
+            if (npc.getX() == hero.getX() && npc.getY() == hero.getY()) {
+                npc.execute(hero);  // allow it to attack
+                continue;
+            }
 
             gridPane.getChildren().remove(npc.getVisual());
 
@@ -194,11 +235,34 @@ public class GameController {
                 npc.setY(oldY);
             }
 
+
+            npc.execute(hero);
+            if (hero.getHealth() < 0) hero.setHealth(-1);
+            checkHeroDeath();
+
+            updateStats();
+
             gridPane.add(npc.getVisual(), npc.getX(), npc.getY());
+
         }
 
         updateStats();
     }
+
+    private void checkHeroDeath() {
+        if (hero.getHealth() == 0) {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Game Over");
+                alert.setHeaderText(null);
+                alert.setContentText("Hero has died. Game over!");
+                alert.showAndWait();
+                Platform.exit();
+                System.exit(0);
+            });
+        }
+    }
+
 
     public Room[][] getWorldGrid() {
         return worldGrid;

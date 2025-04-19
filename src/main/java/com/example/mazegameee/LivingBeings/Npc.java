@@ -39,9 +39,4 @@ public class Npc extends LivingBeings {
         return visual;
     }
 
-
-
-    @Override
-    public void execute() {
-    }
 }
