@@ -6,6 +6,7 @@ import com.example.mazegameee.entities.Objects;
 import com.example.mazegameee.objects.Chest;
 import com.example.mazegameee.structures.Door;
 import com.example.mazegameee.structures.Room;
+import com.example.mazegameee.entities.MazeLayout;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -123,30 +124,63 @@ public class FillMaze {
         }
     }
 
-    public void addDoors(int spacing) {
+    public void addDoors(MazeLayout layout) {
+        int rows = worldGrid.length;
+        int cols = worldGrid[0].length;
         int id = 1;
-        Random random = new Random();
+        Random rnd = new Random();
 
-        for (int row = 0; row < worldGrid.length; row++) {
-            for (int col = 0; col < worldGrid[0].length; col++) {
-                Room current = worldGrid[row][col];
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                Room here = worldGrid[r][c];
 
-                if (col < worldGrid[0].length - 1) {
-                    Room right = worldGrid[row][col + 1];
-                    boolean locked = random.nextBoolean();
-                    Door door = new Door(col, row, id++, locked, current, right);
-                    addDoorVisual(door, true);
+                // ─── EAST side between (r,c) and (r,c+1)
+                if (c < cols - 1) {
+                    Room there = worldGrid[r][c + 1];
+                    if (layout.hasEastOpening(r, c)) {
+                        // Create a door
+                        boolean locked = rnd.nextBoolean();
+                        Door door = new Door(c, r, id++, locked, here, there);
+                        here.getDoors().add(door);
+                        there.getDoors().add(door);
+                        addDoorVisual(door, true);
+                    } else {
+                        // Draw a solid wall spanning both columns c and c+1
+                        Rectangle wall = new Rectangle(5, CELL_SIZE);
+                        wall.setFill(Color.DARKSLATEGRAY);
+                        StackPane wallPane = new StackPane(wall);
+                        GridPane.setColumnIndex(wallPane, c);
+                        GridPane.setRowIndex   (wallPane, r);
+                        GridPane.setColumnSpan(wallPane, 2);
+                        gridPane.getChildren().add(wallPane);
+                    }
                 }
 
-                if (row < worldGrid.length - 1) {
-                    Room down = worldGrid[row + 1][col];
-                    boolean locked = random.nextBoolean();
-                    Door door = new Door(col, row, id++, locked, current, down);
-                    addDoorVisual(door, false);
+                // ─── SOUTH side between (r,c) and (r+1,c)
+                if (r < rows - 1) {
+                    Room there = worldGrid[r + 1][c];
+                    if (layout.hasSouthOpening(r, c)) {
+                        // Create a door
+                        boolean locked = rnd.nextBoolean();
+                        Door door = new Door(c, r, id++, locked, here, there);
+                        here.getDoors().add(door);
+                        there.getDoors().add(door);
+                        addDoorVisual(door, false);
+                    } else {
+                        // Draw a solid wall spanning both rows r and r+1
+                        Rectangle wall = new Rectangle(CELL_SIZE, 5);
+                        wall.setFill(Color.DARKSLATEGRAY);
+                        StackPane wallPane = new StackPane(wall);
+                        GridPane.setColumnIndex(wallPane, c);
+                        GridPane.setRowIndex   (wallPane, r);
+                        GridPane.setRowSpan    (wallPane, 2);
+                        gridPane.getChildren().add(wallPane);
+                    }
                 }
             }
         }
     }
+
 
     private void addDoorVisual(Door door, boolean vertical) {
         Rectangle wallRect = vertical ? new Rectangle(5, CELL_SIZE) : new Rectangle(CELL_SIZE, 5);

@@ -2,6 +2,7 @@ package com.example.mazegameee.game;
 
 import com.example.mazegameee.LivingBeings.Hero;
 import com.example.mazegameee.LivingBeings.Npc;
+import com.example.mazegameee.entities.MazeLayout;
 import com.example.mazegameee.structures.Room;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -14,8 +15,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.control.Alert;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -87,15 +91,40 @@ public class GameUI {
             exit = worldGrid[exitRow][exitCol];
         } while (exit == entrance);
 
+        MazeLayout layout;
+        try {
+            layout = MazeLayout.loadFromCSV("/solvable-maze-layout.csv", GRID_SIZE, GRID_SIZE);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         fillMaze.markExit(exit);
         gameController.setExitCoordinates(exit.getY(), exit.getX());
         fillMaze.addHeroVisual(0, 0, heroImage);
         fillMaze.addNPCs(10, 0, 0);
         fillMaze.addChest(20, 0, 0);
-        fillMaze.addDoors(1);
 
+        fillMaze.addDoors(layout);
+
+        int maxAttempts = 10, attempts = 0;
+        do {
+            gameController.randomLockAllDoors(0.5);
+            attempts++;
+        } while (!gameController.isSolvableWithResources() && attempts < maxAttempts);
+
+        if (attempts == maxAttempts && !gameController.isSolvableWithResources()) {
+            // last‐ditch warning, but we fall through so the window appears
+            new Alert(Alert.AlertType.WARNING,
+                    "Couldn’t make a winnable maze in " + maxAttempts + " tries.\n" +
+                            "You may be trapped from the start!")
+                    .showAndWait();
+        }
+
+// now this method returns, Main.start can call stage.show()
         gameController.updateStats();
         startNPCMovement();
+
+
+
     }
 
     private void startNPCMovement() {
