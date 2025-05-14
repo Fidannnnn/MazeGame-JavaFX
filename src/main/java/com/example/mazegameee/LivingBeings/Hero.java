@@ -8,6 +8,13 @@ public class Hero extends LivingBeings {
     private int numOfKeys = 5;
     private int numOfCrowbars = 0;
 
+    public Hero(int x, int y, int strength, int health, int startKeys, int startCrowbars) {
+        super(x, y, strength);
+        this.health = health;
+        this.numOfKeys      = startKeys;
+        this.numOfCrowbars  = startCrowbars;
+    }
+
     public int getStrength() {
         return strength;
     }
@@ -20,10 +27,10 @@ public class Hero extends LivingBeings {
         return numOfCrowbars;
     }
 
-    public Hero(int x, int y, int strength, int health) {
-        super(x, y, strength);
-        this.health = health;
-    }
+//    public Hero(int x, int y, int strength, int health) {
+//        super(x, y, strength);
+//        this.health = health;
+//    }
 
     public void addHealth(int points) {
         this.health += points;

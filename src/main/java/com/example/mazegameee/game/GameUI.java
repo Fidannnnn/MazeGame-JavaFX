@@ -65,7 +65,7 @@ public class GameUI {
 
         worldGrid = new Room[GRID_SIZE][GRID_SIZE];
         npcs = new ArrayList<>();
-        hero = new Hero(0, 0, 100, 100);
+        hero = new Hero(0, 0, 100, 100, 5, 5);
 
         heroImage = new ImageView(new Image("hero.png"));
         heroImage.setFitWidth(CELL_SIZE / 3);
@@ -93,7 +93,7 @@ public class GameUI {
 
         MazeLayout layout;
         try {
-            layout = MazeLayout.loadFromCSV("/solvable-maze-layout.csv", GRID_SIZE, GRID_SIZE);
+            layout = MazeLayout.loadFromCSV("/maze-layout-custom.csv", GRID_SIZE, GRID_SIZE);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -107,7 +107,7 @@ public class GameUI {
 
         int maxAttempts = 10, attempts = 0;
         do {
-            gameController.randomLockAllDoors(0.5);
+            gameController.randomLockAllDoors(0.45);
             attempts++;
         } while (!gameController.isSolvableWithResources() && attempts < maxAttempts);
 

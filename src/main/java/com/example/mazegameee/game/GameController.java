@@ -69,59 +69,71 @@ public class GameController {
 
 
     public boolean moveHero(int newRow, int newCol, int heroRow, int heroCol, ImageView heroImage, Pos alignment) {
-        if (newRow < 0 || newRow >= worldGrid.length || newCol < 0 || newCol >= worldGrid[0].length) return false;
+        // 1️⃣ Bounds check
+        if (newRow < 0 || newRow >= worldGrid.length
+                || newCol < 0 || newCol >= worldGrid[0].length) {
+            return false;
+        }
 
         Room currentRoom = worldGrid[heroRow][heroCol];
-        Room targetRoom = worldGrid[newRow][newCol];
+        Room targetRoom  = worldGrid[newRow][newCol];
 
+        // 2️⃣ Must be connected by an unlocked door
         if (!currentRoom.isConnectedTo(targetRoom)) {
             System.out.println("No unlocked door between current room and target room.");
             return false;
         }
 
-        // Remove hero image from current cell
+        // 3️⃣ Remove hero image from old cell
         gridPane.getChildren().removeIf(node ->
                 GridPane.getColumnIndex(node) != null &&
-                        GridPane.getRowIndex(node) != null &&
+                        GridPane.getRowIndex   (node) != null &&
                         GridPane.getColumnIndex(node) == heroCol &&
-                        GridPane.getRowIndex(node) == heroRow &&
+                        GridPane.getRowIndex   (node) == heroRow &&
                         node instanceof StackPane &&
                         ((StackPane) node).getChildren().contains(heroImage)
         );
 
-        // Update hero's position
+        // 4️⃣ Update hero model position
         hero.setX(newCol);
         hero.setY(newRow);
 
-        // After updating hero's position and adding visual
+        // 5️⃣ Check victory
         if (hero.getY() == exitRow && hero.getX() == exitCol) {
-            javafx.application.Platform.runLater(() -> {
-                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Victory");
                 alert.setHeaderText(null);
                 alert.setContentText("You reached the exit. You win!");
-                alert.showAndWait();  // Wait until alert is closed
-
-                // Close the application
-                javafx.application.Platform.exit();
-                System.exit(0); // Ensures JVM stops
+                alert.showAndWait();
+                Platform.exit();
+                System.exit(0);
             });
         }
 
-
-        // Add hero to new position
+        // 6️⃣ Draw hero in the new cell
         StackPane newHeroPane = new StackPane(heroImage);
         newHeroPane.setPrefSize(CELL_SIZE, CELL_SIZE);
         newHeroPane.setAlignment(alignment);
         newHeroPane.setMouseTransparent(true);
         gridPane.add(newHeroPane, newCol, newRow);
-//        if (!isSolvableWithResources()) {
-//            new Alert(Alert.AlertType.INFORMATION,
-//                    "You’ve walked into a trap! The exit is\nblocked unless you backtrack or find a chest.")
-//                    .showAndWait();
-//        }
+
+        // 7️⃣ Only alert if absolutely stuck (no resources, no chests, no exit path)
+        if (isCompletelyStuck()) {
+            Alert stuckAlert = new Alert(Alert.AlertType.WARNING);
+            stuckAlert.setTitle("Trapped!");
+            stuckAlert.setHeaderText(null);
+            stuckAlert.setContentText(
+                    "You have no keys, no crowbars,\n" +
+                            "no reachable chests, and no path to the exit.\n" +
+                            "You’re completely trapped!"
+            );
+            stuckAlert.showAndWait();
+        }
+
         return true;
     }
+
 
     public void setExitCoordinates(int row, int col) {
         this.exitRow = row;
@@ -142,7 +154,9 @@ public class GameController {
         Room adjacentRoom = worldGrid[newRow][newCol];
 
         for (Door door : currentRoom.getDoors()) {
-            if (!door.getRooms().contains(adjacentRoom)) continue;
+            if (!door.getRooms().contains(adjacentRoom)) {
+                continue;
+            }
 
             // Found the door between current and adjacent
             if (door.isLocked()) {
@@ -154,32 +168,27 @@ public class GameController {
                     updateStats();
                     System.out.println("Unlocked Door " + door.getDoorID() + " with a key!");
 
-                    // 1️⃣ Check exit reachability with remaining resources
-                    boolean canExit       = isSolvableWithResources();
-                    // 2️⃣ Check which chests are still reachable
-                    Set<Chest> chestsLeft = getReachableChests();
-
-                    if (!canExit && chestsLeft.isEmpty()) {
+                    // ❗ Only alert if hero is completely stuck
+                    if (isCompletelyStuck()) {
                         new Alert(Alert.AlertType.WARNING,
-                                "You’ve used your last key/crowbar\n" +
-                                        "and no chests are reachable—you’re trapped!")
+                                "You have no keys, no crowbars,\n" +
+                                        "no chests reachable,\n" +
+                                        "and no path to the exit.\n" +
+                                        "You’re completely trapped!")
                                 .showAndWait();
                     }
-                    else if (!canExit) {
-                        String coords = chestsLeft.stream()
-                                .map(c -> "(" + c.getX() + "," + c.getY() + ")")
-                                .collect(Collectors.joining(", "));
-//                        new Alert(Alert.AlertType.INFORMATION,
-//                                "Exit is blocked right now,\nbut you can still reach these chests:\n" +
-//                                        coords)
-//                                .showAndWait();
-                    }
+                }
+                else if (hero.getNumOfCrowbars() > 0) {
+                    hero.addNumOfCrowbars(-1);
+                    door.setLocked(false);
+                    door.updateVisual();
+                    updateStats();
+                    System.out.println("Smashed Door with a crowbar!");
                 }
                 else {
-                    System.out.println("Door is locked. You need a key.");
+                    System.out.println("Door is locked. You need a key or a crowbar!.");
                 }
-            }
-            else {
+            } else {
                 System.out.println("Door " + door.getDoorID() + " is already open.");
             }
 
@@ -191,68 +200,64 @@ public class GameController {
         System.out.println("No door in that direction.");
     }
 
+
     public void tryOpenChest(Chest chest, int heroRow, int heroCol) {
         // Only open if the hero is standing on the chest
-        if (chest.getX() == heroCol && chest.getY() == heroRow) {
-            // Attempt to unlock (e.g. if it’s locked)
-            if (chest.unlock(hero)) {
-                // 1️⃣ Give items to the hero
-                List<Objects> items = chest.getItems();
-                for (Objects item : items) {
-                    if (item instanceof Key) {
-                        hero.addNumOfKeys(1);
-                    }
-                    else if (item instanceof Crowbar) {
-                        hero.addNumOfCrowbars(1);
-                    }
-                    else if (item instanceof HealthPotion hp) {
-                        hero.addHealth(hp.getHealthPoints());
-                    }
-                }
-
-                // 2️⃣ Remove the chest from the model
-                worldGrid[heroRow][heroCol].getObjects().remove(chest);
-
-                // 3️⃣ Remove the chest visual from the grid
-                gridPane.getChildren().removeIf(node ->
-                        GridPane.getColumnIndex(node) != null &&
-                                GridPane.getRowIndex(node)    != null &&
-                                GridPane.getColumnIndex(node) == heroCol &&
-                                GridPane.getRowIndex(node)    == heroRow &&
-                                node instanceof StackPane &&
-                                "chest".equals(((StackPane) node).getId())
-                );
-
-                // 4️⃣ Update stats display
-                updateStats();
-                System.out.println("Chest items added to the hero!");
-
-                // 5️⃣ Re-evaluate exit & chest reachability
-                boolean canExit       = isSolvableWithResources();
-                Set<Chest> chestsLeft = getReachableChests();
-
-                if (!canExit && chestsLeft.isEmpty()) {
-                    new Alert(Alert.AlertType.ERROR,
-                            "That chest didn’t give you enough resources—you’re trapped!")
-                            .showAndWait();
-                }
-                else if (!canExit) {
-                    String coords = chestsLeft.stream()
-                            .map(c -> "(" + c.getX() + "," + c.getY() + ")")
-                            .collect(Collectors.joining(", "));
-//                    new Alert(Alert.AlertType.INFORMATION,
-//                            "Exit is still blocked, but you can reach\n" +
-//                                    "these chests to stock up:\n" + coords)
-//                            .showAndWait();
-                }
-            }
-            // If chest.unlock(...) returned false, you might want
-            // to print a message or play a sound here.
-        }
-        else {
+        if (chest.getX() != heroCol || chest.getY() != heroRow) {
             System.out.println("You must stand on the chest to open it.");
+            return;
+        }
+
+        // Attempt to unlock (chest.unlock will use a key or a crowbar if available)
+        if (!chest.unlock(hero)) {
+            // unlock(...) already printed why (no key/crowbar), so just bail out
+            return;
+        }
+
+        // At this point the chest is unlocked, so distribute its items:
+
+        // 1️⃣ Give items to the hero
+        List<Objects> items = chest.getItems();
+        for (Objects item : items) {
+            if (item instanceof Key) {
+                hero.addNumOfKeys(1);
+            }
+            else if (item instanceof Crowbar) {
+                hero.addNumOfCrowbars(1);
+            }
+            else if (item instanceof HealthPotion hp) {
+                hero.addHealth(hp.getHealthPoints());
+            }
+        }
+
+        // 2️⃣ Remove the chest from the room’s object list
+        worldGrid[heroRow][heroCol].getObjects().remove(chest);
+
+        // 3️⃣ Remove the chest visual from the grid
+        gridPane.getChildren().removeIf(node ->
+                GridPane.getColumnIndex(node) != null &&
+                        GridPane.getRowIndex   (node) != null &&
+                        GridPane.getColumnIndex(node) == heroCol &&
+                        GridPane.getRowIndex   (node) == heroRow &&
+                        node instanceof StackPane &&
+                        "chest".equals(((StackPane) node).getId())
+        );
+
+        // 4️⃣ Update stats display
+        updateStats();
+        System.out.println("Chest items added to the hero!");
+
+        // 5️⃣ Final “completely stuck” check, alert if no way forward
+        if (isCompletelyStuck()) {
+            new Alert(Alert.AlertType.WARNING,
+                    "You have no keys, no crowbars,\n" +
+                            "no reachable chests, and no path to the exit.\n" +
+                            "You’re completely trapped!")
+                    .showAndWait();
         }
     }
+
+
 
 
     public Chest getChestAt(int col, int row) {
@@ -354,28 +359,28 @@ public class GameController {
         }
     }
 
-//    /** BFS from (0,0) to (exitRow,exitCol) through only unlocked doors */
-//    public boolean isSolvable() {
-//        Room start = worldGrid[0][0];
-//        Room goal  = worldGrid[exitRow][exitCol];
-//        Queue<Room> q = new LinkedList<>();
-//        Set<Room> seen = new HashSet<>();
-//        q.add(start);
-//        seen.add(start);
-//
-//        while (!q.isEmpty()) {
-//            Room cur = q.poll();
-//            if (cur == goal) return true;
-//            for (Door door : cur.getDoors()) {
-//                if (door.isLocked()) continue;
-//                Room nbr = door.getOtherRoom(cur);
-//                if (nbr != null && seen.add(nbr)) {
-//                    q.add(nbr);
-//                }
-//            }
-//        }
-//        return false;
-//    }
+    /** BFS from (0,0) to (exitRow,exitCol) through only unlocked doors */
+    public boolean isSolvable() {
+        Room start = worldGrid[0][0];
+        Room goal  = worldGrid[exitRow][exitCol];
+        Queue<Room> q = new LinkedList<>();
+        Set<Room> seen = new HashSet<>();
+        q.add(start);
+        seen.add(start);
+
+        while (!q.isEmpty()) {
+            Room cur = q.poll();
+            if (cur == goal) return true;
+            for (Door door : cur.getDoors()) {
+                if (door.isLocked()) continue;
+                Room nbr = door.getOtherRoom(cur);
+                if (nbr != null && seen.add(nbr)) {
+                    q.add(nbr);
+                }
+            }
+        }
+        return false;
+    }
     /**
      * Returns the set of all chests that the hero could reach,
      * given their current keys & crowbars (and using them as needed
@@ -468,4 +473,23 @@ public class GameController {
         }
         return false;
     }
+    /**
+     * Returns true if the hero has no resources, cannot reach any chest,
+     * and cannot reach the exit through unlocked doors.
+     */
+    public boolean isCompletelyStuck() {
+        // 1 & 2: no resources
+        if (hero.getNumOfKeys() > 0 || hero.getNumOfCrowbars() > 0) {
+            return false;
+        }
+
+        // 3: no chests reachable without spending resources
+        if (!getReachableChests().isEmpty()) {
+            return false;
+        }
+
+        // 4: no path to exit through unlocked doors only
+        return !isSolvable();
+    }
+
 }
