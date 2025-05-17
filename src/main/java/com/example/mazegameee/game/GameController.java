@@ -3,20 +3,22 @@ package com.example.mazegameee.game;
 import com.example.mazegameee.LivingBeings.Hero;
 import com.example.mazegameee.LivingBeings.Npc;
 import com.example.mazegameee.entities.Objects;
-import com.example.mazegameee.objects.*;
+import com.example.mazegameee.objects.Chest;
+import com.example.mazegameee.objects.Crowbar;
+import com.example.mazegameee.objects.HealthPotion;
+import com.example.mazegameee.objects.Key;
 import com.example.mazegameee.structures.Door;
 import com.example.mazegameee.structures.Room;
-import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import java.util.stream.Collectors;
-
 
 import java.util.*;
+import java.util.function.Consumer;
+
 
 public class GameController {
     private final Room[][] worldGrid;
@@ -32,6 +34,8 @@ public class GameController {
     private int exitRow;
     private int exitCol;
 
+    private boolean gameOver = false;
+    private Consumer<Boolean> onGameEnd;
 
     public GameController(Room[][] worldGrid, List<Npc> npcs, Hero hero,
                           GridPane gridPane, Label healthLabel,
@@ -67,8 +71,12 @@ public class GameController {
         }
     }
 
+    public void setOnGameEnd(Consumer<Boolean> onGameEnd) {
+        this.onGameEnd = onGameEnd;
+    }
 
-    public boolean moveHero(int newRow, int newCol, int heroRow, int heroCol, ImageView heroImage, Pos alignment) {
+
+    public boolean moveHero(int newRow, int newCol,int heroRow, int heroCol,ImageView heroImage, Pos ignoredAlignment) {
         // 1️⃣ Bounds check
         if (newRow < 0 || newRow >= worldGrid.length
                 || newCol < 0 || newCol >= worldGrid[0].length) {
@@ -100,21 +108,19 @@ public class GameController {
 
         // 5️⃣ Check victory
         if (hero.getY() == exitRow && hero.getX() == exitCol) {
-            Platform.runLater(() -> {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Victory");
-                alert.setHeaderText(null);
-                alert.setContentText("You reached the exit. You win!");
-                alert.showAndWait();
-                Platform.exit();
-                System.exit(0);
-            });
+            if (!gameOver) {
+                gameOver = true;
+                if (onGameEnd != null) onGameEnd.accept(true);
+            }
+            return true;
         }
 
-        // 6️⃣ Draw hero in the new cell
+
+
+        // 6️⃣ Draw hero in the new cell, centered
         StackPane newHeroPane = new StackPane(heroImage);
         newHeroPane.setPrefSize(CELL_SIZE, CELL_SIZE);
-        newHeroPane.setAlignment(alignment);
+        newHeroPane.setAlignment(Pos.CENTER);      // always center the hero
         newHeroPane.setMouseTransparent(true);
         gridPane.add(newHeroPane, newCol, newRow);
 
@@ -133,6 +139,7 @@ public class GameController {
 
         return true;
     }
+
 
 
     public void setExitCoordinates(int row, int col) {
@@ -288,6 +295,7 @@ public class GameController {
 
 
     public void moveNPCs() {
+        if (hero.getHealth() <= 0) return;
         for (Npc npc : npcs) {
             int oldX = npc.getX();
             int oldY = npc.getY();
@@ -310,6 +318,16 @@ public class GameController {
                 npc.setY(oldY);
             }
 
+            // Update the visual alignment based on horizontal movement
+            StackPane pane = (StackPane) npc.getVisual();
+            if (npc.getX() < oldX) {
+                // moved left
+                pane.setAlignment(Pos.BOTTOM_LEFT);
+            } else if (npc.getX() > oldX) {
+                // moved right
+                pane.setAlignment(Pos.BOTTOM_RIGHT);
+            }
+
 
             npc.execute(hero);
             if (hero.getHealth() < 0) hero.setHealth(-1);
@@ -317,7 +335,7 @@ public class GameController {
 
             updateStats();
 
-            gridPane.add(npc.getVisual(), npc.getX(), npc.getY());
+            gridPane.add(pane, npc.getX(), npc.getY());
 
         }
 
@@ -325,19 +343,11 @@ public class GameController {
     }
 
     private void checkHeroDeath() {
-        if (hero.getHealth() == 0) {
-            Platform.runLater(() -> {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Game Over");
-                alert.setHeaderText(null);
-                alert.setContentText("Hero has died. Game over!");
-                alert.showAndWait();
-                Platform.exit();
-                System.exit(0);
-            });
+        if (hero.getHealth() <= 0 && !gameOver) {
+            gameOver = true;
+            if (onGameEnd != null) onGameEnd.accept(false);
         }
     }
-
 
     public Room[][] getWorldGrid() {
         return worldGrid;

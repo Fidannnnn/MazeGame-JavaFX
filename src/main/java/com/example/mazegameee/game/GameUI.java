@@ -39,6 +39,7 @@ public class GameUI {
     private final List<Npc> npcs;
     private final Hero hero;
     private final ImageView heroImage;
+    private Timeline npcMove;
 
     private final FillMaze fillMaze;
     private final GameController gameController;
@@ -126,12 +127,23 @@ public class GameUI {
 
 
     }
+    public GameController getController() {
+        return gameController;
+    }
 
     private void startNPCMovement() {
-        Timeline npcMove = new Timeline(new KeyFrame(Duration.seconds(1), event -> gameController.moveNPCs()));
+        npcMove = new Timeline(new KeyFrame(Duration.seconds(1), e -> gameController.moveNPCs()));
         npcMove.setCycleCount(Timeline.INDEFINITE);
         npcMove.play();
     }
+
+    /** Stop the NPC loop so we don’t keep attacking after death/victory */
+    public void stopNPCMovement() {
+        if (npcMove != null) {
+            npcMove.stop();
+        }
+    }
+
 
     public Scene getScene() {
         Scene scene = new Scene(mainLayout);

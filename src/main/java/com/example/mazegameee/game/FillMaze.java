@@ -15,6 +15,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -35,27 +36,47 @@ public class FillMaze {
     }
 
     public void drawRooms() {
+        String[] tileFiles = {
+                "tilesand.png",
+                "tilestone.png"
+        };
+        Random rnd = new Random();
+
         for (int row = 0; row < worldGrid.length; row++) {
             for (int col = 0; col < worldGrid[0].length; col++) {
-                Room room = new Room(col, row, row * worldGrid.length + col, new ArrayList<>(), new ArrayList<>());
+                // Model
+                Room room = new Room(col, row, row * worldGrid.length + col,
+                        new ArrayList<>(), new ArrayList<>());
                 worldGrid[row][col] = room;
 
-                Image roomIcon = new Image("room.jpeg");
-                ImageView roomImage = new ImageView(roomIcon);
-                roomImage.setFitWidth(CELL_SIZE);
-                roomImage.setFitHeight(CELL_SIZE);
-                gridPane.add(roomImage, col, row);
+                // Pick a random tile
+                String path = tileFiles[rnd.nextInt(tileFiles.length)];
+                InputStream is = getClass()
+                        .getClassLoader()
+                        .getResourceAsStream(path);
+                if (is == null) {
+                    throw new IllegalStateException("Cannot load resource: " + path);
+                }
+                Image tile = new Image(is);
+                ImageView iv = new ImageView(tile);
+                iv.setFitWidth(CELL_SIZE);
+                iv.setFitHeight(CELL_SIZE);
+
+                gridPane.add(iv, col, row);
             }
         }
     }
 
+
+
     public void markExit(Room exit) {
-        ImageView exitImage = new ImageView(new Image("exit.png"));
+        ImageView exitImage = new ImageView(new Image("opengate.png"));
         exitImage.setFitWidth(CELL_SIZE);
         exitImage.setFitHeight(CELL_SIZE);
 
         StackPane exitPane = new StackPane(exitImage);
         exitPane.setPrefSize(CELL_SIZE, CELL_SIZE);
+        exitPane.setMouseTransparent(true);
         exitPane.setAlignment(Pos.CENTER);
 
         gridPane.add(exitPane, exit.getX(), exit.getY());
@@ -64,7 +85,7 @@ public class FillMaze {
     public void addHeroVisual(int row, int col, ImageView heroImage) {
         StackPane heroPane = new StackPane(heroImage);
         heroPane.setPrefSize(CELL_SIZE, CELL_SIZE);
-        heroPane.setAlignment(Pos.BOTTOM_RIGHT);
+        heroPane.setAlignment(Pos.CENTER);
         gridPane.add(heroPane, col, row);
     }
 
@@ -87,6 +108,7 @@ public class FillMaze {
             npcImage.setFitHeight(CELL_SIZE / 3);
 
             StackPane npcPane = new StackPane(npcImage);
+            npcPane.setAlignment(Pos.BOTTOM_CENTER);
             npcPane.setPrefSize(CELL_SIZE, CELL_SIZE);
             npcPane.setMouseTransparent(true);
             npc.setVisual(npcPane);
@@ -108,21 +130,30 @@ public class FillMaze {
             boolean npcThere = npcs.stream().anyMatch(n -> n.getX() == col && n.getY() == row);
             if (npcThere) continue;
 
+            // 1️⃣ Create the model object
             Chest chest = new Chest(col, row, true);
             worldGrid[row][col].getObjects().add(chest);
 
-            Rectangle rect = new Rectangle(CELL_SIZE / 3, CELL_SIZE / 3);
-            rect.setFill(Color.GOLD);
+            // 2️⃣ Load the chest image
+            Image chestIcon = new Image("chest.png");
+            ImageView chestImage = new ImageView(chestIcon);
+            chestImage.setFitWidth(CELL_SIZE / 3);
+            chestImage.setFitHeight(CELL_SIZE / 3);
 
-            StackPane chestPane = new StackPane(rect);
+            // 3️⃣ Wrap it in a StackPane just like before
+            StackPane chestPane = new StackPane(chestImage);
             chestPane.setId("chest");
             chestPane.setPrefSize(CELL_SIZE, CELL_SIZE);
             chestPane.setAlignment(Pos.TOP_RIGHT);
+            chestPane.setMouseTransparent(true);
 
+            // 4️⃣ Add to the grid
             gridPane.add(chestPane, col, row);
+
             placed++;
         }
     }
+
 
     public void addDoors(MazeLayout layout) {
         int rows = worldGrid.length;

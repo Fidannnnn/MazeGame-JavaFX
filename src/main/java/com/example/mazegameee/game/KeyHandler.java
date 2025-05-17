@@ -5,7 +5,6 @@ import com.example.mazegameee.LivingBeings.Npc;
 import com.example.mazegameee.objects.Chest;
 import javafx.geometry.Pos;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
 public class KeyHandler {
@@ -27,22 +26,27 @@ public class KeyHandler {
 
     public void handle(KeyEvent event, boolean isHeroOnRight) {
         switch (event.getCode()) {
-            case UP, DOWN -> {
-                int newRow = heroRow + (event.getCode() == KeyCode.UP ? -1 : 1);
-                Pos alignment = isHeroOnRight ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT;
-                if (controller.moveHero(newRow, heroCol, heroRow, heroCol, heroImage, alignment)) {
+            case UP -> {
+                int newRow = heroRow - 1;
+                if (controller.moveHero(newRow, heroCol, heroRow, heroCol, heroImage, Pos.CENTER)) {
+                    heroRow = newRow;
+                }
+            }
+            case DOWN -> {
+                int newRow = heroRow + 1;
+                if (controller.moveHero(newRow, heroCol, heroRow, heroCol, heroImage, Pos.CENTER)) {
                     heroRow = newRow;
                 }
             }
             case LEFT -> {
                 int newCol = heroCol - 1;
-                if (controller.moveHero(heroRow, newCol, heroRow, heroCol, heroImage, Pos.BOTTOM_LEFT)) {
+                if (controller.moveHero(heroRow, newCol, heroRow, heroCol, heroImage, Pos.CENTER)) {
                     heroCol = newCol;
                 }
             }
             case RIGHT -> {
                 int newCol = heroCol + 1;
-                if (controller.moveHero(heroRow, newCol, heroRow, heroCol, heroImage, Pos.BOTTOM_RIGHT)) {
+                if (controller.moveHero(heroRow, newCol, heroRow, heroCol, heroImage, Pos.CENTER)) {
                     heroCol = newCol;
                 }
             }
