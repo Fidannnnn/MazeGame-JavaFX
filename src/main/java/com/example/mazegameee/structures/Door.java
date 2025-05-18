@@ -17,11 +17,15 @@ public class Door extends StructuralElements implements Activable {
     public Door(int x, int y, int doorID, boolean locked, Room room1, Room room2) {
         super(x, y);
         this.doorID = doorID;
-        this.lock = new Lock(x, y, doorID); // Create a lock with same ID and position
-        this.lock.setLocked(locked);       // Set initial lock state
+
+        // every door gets its own lock, based on doorID
+        this.lock = new Lock(x, y, doorID);
+        this.lock.setLocked(locked);
+
         this.room1 = room1;
         this.room2 = room2;
 
+        // connect door to both rooms
         if (room1 != null) room1.addDoor(this);
         if (room2 != null) room2.addDoor(this);
     }
@@ -35,13 +39,14 @@ public class Door extends StructuralElements implements Activable {
         }
     }
 
+    // just some standard getters/setters
     public int getDoorID() {
         return doorID;
     }
 
     public void setDoorID(int doorID) {
         this.doorID = doorID;
-        if (lock != null) lock.setLockID(doorID);
+        if (lock != null) lock.setLockID(doorID); // make sure lock ID stays in sync
     }
 
     public boolean isLocked() {
@@ -56,6 +61,7 @@ public class Door extends StructuralElements implements Activable {
         return lock;
     }
 
+    // return both rooms as a list (so I can check if another room is “connected”)
     public ArrayList<Room> getRooms() {
         return new ArrayList<>() {{
             add(room1);
@@ -63,22 +69,26 @@ public class Door extends StructuralElements implements Activable {
         }};
     }
 
+    // return the room on the other side of the door
     public Room getOtherRoom(Room current) {
         if (room1 != null && room1.equals(current)) return room2;
         if (room2 != null && room2.equals(current)) return room1;
         return null;
     }
 
+    // visual = the door rectangle that shows up on the board
     public void setVisual(Rectangle visual) {
         this.visual = visual;
     }
 
+    // change door color depending on lock status
     public void updateVisual() {
         if (visual != null) {
             visual.setFill(isLocked() ? Color.DARKRED : Color.SADDLEBROWN);
         }
     }
 
+    // just making x/y accessible
     public int getX() {
         return x;
     }

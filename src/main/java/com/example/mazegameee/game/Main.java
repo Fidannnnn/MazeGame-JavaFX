@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
@@ -16,47 +15,48 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         primaryStage.setTitle("Maze Game");
-        runNewGame();
+        runNewGame();  // launch the game for the first time
     }
 
+    // 🔁 This handles starting a new game (and restarting after win/death)
     private void runNewGame() {
-        GameUI ui = new GameUI();
-        GameController ctl = ui.getController();
+        GameUI ui = new GameUI();                     // set up visuals & gameplay
+        GameController ctl = ui.getController();      // grab the controller
 
+        // hook into the controller’s end-game logic (win/lose)
         ctl.setOnGameEnd(won -> Platform.runLater(() -> {
-            // first, stop the old NPC loop:
-            ui.stopNPCMovement();
+            ui.stopNPCMovement();  // 🛑 stop enemy movement loop
 
+            // build the dialog asking player if they want to play again
             ButtonType playAgain = new ButtonType("Play Again", ButtonData.OK_DONE);
             ButtonType exitGame  = new ButtonType("Exit",       ButtonData.CANCEL_CLOSE);
             Alert alert = new Alert(
                     Alert.AlertType.CONFIRMATION,
-                    won
-                            ? "You win! Play again?"
-                            : "You died! Play again?",
+                    won ? "You win! Play again?" : "You died! Play again?",
                     playAgain, exitGame
             );
             alert.setTitle(won ? "Victory" : "Game Over");
             alert.setHeaderText(null);
 
+            // handle what they choose
             alert.showAndWait().ifPresent(choice -> {
                 if (choice == playAgain) {
-                    runNewGame();       // start fresh
+                    runNewGame();  // reload everything from scratch
                 } else {
-                    Platform.exit();
-                    System.exit(0);
+                    Platform.exit();     // clean close
+                    System.exit(0);      // just in case
                 }
             });
         }));
 
+        // Set scene and key handling
         Scene scene = ui.getScene();
         scene.setOnKeyPressed(ui::handleKeyPress);
         primaryStage.setScene(scene);
-        primaryStage.show();
+        primaryStage.show();  // finally show the game window
     }
 
-
     public static void main(String[] args) {
-        launch(args);
+        launch(args);  // classic JavaFX launcher
     }
 }

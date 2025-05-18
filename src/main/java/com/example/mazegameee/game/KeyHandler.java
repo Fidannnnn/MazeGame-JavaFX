@@ -24,16 +24,16 @@ public class KeyHandler {
     }
 
     public void handle(KeyEvent event) {
-        int dR = 0, dC = 0;
-        boolean moveKey = false;
+        int dR = 0, dC = 0;        // movement direction (row/col offset)
+        boolean moveKey = false;  // did the player press a movement key?
 
         switch (event.getCode()) {
-            case W, UP    -> { dR = -1; moveKey = true; }
-            case S, DOWN  -> { dR =  1; moveKey = true; }
-            case A, LEFT  -> { dC = -1; moveKey = true; }
-            case D, RIGHT -> { dC =  1; moveKey = true; }
+            case W, UP    -> { dR = -1; moveKey = true; }  // go up
+            case S, DOWN  -> { dR =  1; moveKey = true; }  // go down
+            case A, LEFT  -> { dC = -1; moveKey = true; }  // go left
+            case D, RIGHT -> { dC =  1; moveKey = true; }  // go right
 
-            // Open chest
+            // E → open chest at your feet (if one exists)
             case E -> {
                 Chest chest = controller.getChestAt(heroCol, heroRow);
                 if (chest != null) {
@@ -41,7 +41,8 @@ public class KeyHandler {
                 }
                 return;
             }
-            // Attack NPC
+
+            // F → attack NPC in same room
             case F -> {
                 Npc target = controller.getNpcAt(hero.getX(), hero.getY());
                 if (target != null) {
@@ -53,25 +54,24 @@ public class KeyHandler {
                 }
                 return;
             }
+
             default -> {
-                // ignore other keys
+                // ignore everything else
                 return;
             }
         }
 
         if (moveKey) {
-            // 1) Try to unlock the door (if locked)
+            // 1️⃣ First, try unlocking the door in that direction (if needed)
             controller.tryUnlockDoorInDirection(heroRow, heroCol, dR, dC);
 
-            // 2) Then attempt to move through it
+            // 2️⃣ Then try to walk through the door (if it's now open)
             int newRow = heroRow + dR;
             int newCol = heroCol + dC;
-            if (controller.moveHero(newRow, newCol,
-                    heroRow, heroCol,
-                    heroImage, Pos.CENTER)) {
+            if (controller.moveHero(newRow, newCol, heroRow, heroCol, heroImage, Pos.CENTER)) {
                 heroRow = newRow;
                 heroCol = newCol;
-                controller.updateStats();
+                controller.updateStats();  // update health, keys, etc.
             }
         }
     }

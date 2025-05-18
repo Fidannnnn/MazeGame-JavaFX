@@ -6,7 +6,7 @@ public class Key extends Objects {
     public Key(int x, int y) {
         super(x, y);
     }
-    public void openLock(Lock lock){
+    public static void openLock(Lock lock){
         lock.setLocked(false);
     }
 }
