@@ -152,8 +152,7 @@ public class GameUI {
     }
 
     public void handleKeyPress(KeyEvent event) {
-        keyHandler.handle(event, isHeroOnRight);
-
+        keyHandler.handle(event);
         if (event.getCode().toString().equals("LEFT")) isHeroOnRight = false;
         else if (event.getCode().toString().equals("RIGHT")) isHeroOnRight = true;
     }
