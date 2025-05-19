@@ -31,4 +31,13 @@ Build OPP_MAZE from the source and install dependencies:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/shahin1717/OPP_MAZE
+   git clone https://github.com/Fidannnnn/MazeGame-JavaFX
+2. **Navigate to the project directory:**
+   ```basg
+   cd OPP_MAZE
+3. **Install the dependencies:**
+   ```bash
+   mvn install
+4. **Run the project with:**
+   ```bash
+   mvn exec:java
