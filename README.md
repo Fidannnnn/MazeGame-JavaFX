@@ -1,8 +1,8 @@
 ## Overview
 
-**OPP_MAZE** is an innovative JavaFX-based maze game that combines engaging gameplay with a robust architecture, designed to empower developers in creating immersive gaming experiences.
+**MAZE GAME** is an innovative JavaFX-based maze game that combines engaging gameplay with a robust architecture, designed to empower developers in creating immersive gaming experiences.
 
-### Why OPP_MAZE?
+### Why MAZE GAME?
 
 This project simplifies game development while maximizing player engagement. The core features include:
 
@@ -26,7 +26,7 @@ This project requires the following dependencies:
 
 ## Installation
 
-Build OPP_MAZE from the source and install dependencies:
+Build MAZE GAME from the source and install dependencies:
 
 1. **Clone the repository:**
 
@@ -34,7 +34,7 @@ Build OPP_MAZE from the source and install dependencies:
    git clone https://github.com/Fidannnnn/MazeGame-JavaFX
 2. **Navigate to the project directory:**
    ```basg
-   cd OPP_MAZE
+   cd MAZE GAME
 3. **Install the dependencies:**
    ```bash
    mvn install
