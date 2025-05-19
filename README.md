@@ -28,16 +28,23 @@ This project requires the following dependencies:
 
 Build MAZE GAME from the source and install dependencies:
 
-1. **Clone the repository:**
+1. **Install the JavaFX 21 from:**
+   ```bash
+   https://gluonhq.com/products/javafx/
+2. **Install the JavaFX 21 from:**
+   ```bash
+   https://www.oracle.com/cis/java/technologies/downloads/#java21
+3. **Clone the repository:**
 
    ```bash
    git clone https://github.com/Fidannnnn/MazeGame-JavaFX
-2. **Navigate to the project directory:**
-   ```basg
-   cd MazeGame-JavaFX
-3. **Install the dependencies:**
+4. **Navigate to the project directory:**
    ```bash
-   mvn install
-4. **Run the project with:**
+   cd MazeGame-JavaFX
+
+5. **Install the dependencies:**
+   ```bash
+   mvn install 
+6. **Run the project with:**
    ```bash
    mvn exec:java
