@@ -34,7 +34,7 @@ Build MAZE GAME from the source and install dependencies:
    git clone https://github.com/Fidannnnn/MazeGame-JavaFX
 2. **Navigate to the project directory:**
    ```basg
-   cd MAZE GAME
+   cd MazeGame-JavaFX
 3. **Install the dependencies:**
    ```bash
    mvn install
