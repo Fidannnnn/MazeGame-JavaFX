@@ -14,7 +14,6 @@ You play as a **Hero** exploring a maze filled with locked doors, chests, and ho
 - [🗂 Project Structure](#-project-structure)
 - [🛠 Setup Instructions](#-setup-instructions)
 - [👥 Contributors](#-contributors)
-- [📄 License](#-license)
 
 ---
 
