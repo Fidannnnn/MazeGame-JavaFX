@@ -32,7 +32,7 @@ You play as a **Hero** exploring a maze filled with locked doors, chests, and ho
 
 ## 📸 Preview
 
-> *(Visuals coming soon – stay tuned!)*
+>![img.png](img.png)
 
 ---
 
@@ -151,6 +151,3 @@ Stars ⭐ are also appreciated!
 
 Thanks for checking out **MazeGame-JavaFX**!  
 Enjoy exploring — and don't get stuck behind a locked door! 🚪🗝️
-=======
-
->>>>>>> 5420b2956b1c9319e0571bbc756fd8c4ba2fc072
