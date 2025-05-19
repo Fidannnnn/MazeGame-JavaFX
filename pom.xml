@@ -59,7 +59,7 @@
         <execution>
             <id>default-cli</id>
             <configuration>
-                <mainClass>com.example.mazegameee.HelloApplication</mainClass>
+                <mainClass>com.example.mazegameee.game.Main</mainClass>
                 <launcher>app</launcher>
                 <jlinkZipName>app</jlinkZipName>
                 <jlinkImageName>app</jlinkImageName>
