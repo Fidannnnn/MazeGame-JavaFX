@@ -31,7 +31,7 @@ Build MAZE GAME from the source and install dependencies:
 1. **Install the JavaFX 21 from:**
    ```bash
    https://gluonhq.com/products/javafx/
-2. **Install the JavaFX 21 from:**
+2. **Install the JDK 21 from:**
    ```bash
    https://www.oracle.com/cis/java/technologies/downloads/#java21
 3. **Clone the repository:**
