@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🧩 MazeGame-JavaFX
 
 Welcome to **MazeGame-JavaFX**, a dynamic turn-based maze exploration game built using **Java** and **JavaFX**. This project blends strategy, procedural generation, and classic object-oriented programming in a cleanly designed grid-based adventure.
