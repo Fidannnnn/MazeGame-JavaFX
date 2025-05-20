@@ -96,7 +96,7 @@ public class GameController {
 
 
     public boolean moveHero(int newRow, int newCol, int heroRow, int heroCol, ImageView heroImage, Pos ignoredAlignment) {
-        // 1️⃣ don’t let hero go off the grid
+        // don’t let hero go off the grid
         if (newRow < 0 || newRow >= worldGrid.length
                 || newCol < 0 || newCol >= worldGrid[0].length) {
             return false;
@@ -105,13 +105,13 @@ public class GameController {
         Room currentRoom = worldGrid[heroRow][heroCol];
         Room targetRoom  = worldGrid[newRow][newCol];
 
-        // 2️⃣ check if there's a door between current and target room AND it’s unlocked
+        // check if there's a door between current and target room AND it’s unlocked
         if (!currentRoom.isConnectedTo(targetRoom)) {
             System.out.println("No unlocked door between current room and target room.");
             return false;
         }
 
-        // 3️⃣ remove the hero image from the old cell
+        // remove the hero image from the old cell
         gridPane.getChildren().removeIf(node ->
                 GridPane.getColumnIndex(node) != null &&
                         GridPane.getRowIndex(node)    != null &&
@@ -121,11 +121,11 @@ public class GameController {
                         ((StackPane) node).getChildren().contains(heroImage)
         );
 
-        // 4️⃣ update hero's internal position
+        // update hero's internal position
         hero.setX(newCol);
         hero.setY(newRow);
 
-        // 5️⃣ win condition — if hero reaches the exit, trigger game win
+        // win condition — if hero reaches the exit, trigger game win
         if (hero.getY() == exitRow && hero.getX() == exitCol) {
             if (!gameOver) {
                 gameOver = true;
@@ -134,14 +134,14 @@ public class GameController {
             return true;
         }
 
-        // 6️⃣ add hero back to the grid in new location
+        // add hero back to the grid in new location
         StackPane newHeroPane = new StackPane(heroImage);
         newHeroPane.setPrefSize(CELL_SIZE, CELL_SIZE);
         newHeroPane.setAlignment(Pos.CENTER); // keep hero centered
         newHeroPane.setMouseTransparent(true);
         gridPane.add(newHeroPane, newCol, newRow);
 
-        // 7️⃣ check if hero is stuck with no resources and nowhere to go
+        // check if hero is stuck with no resources and nowhere to go
         if (isCompletelyStuck()) {
             Alert stuckAlert = new Alert(Alert.AlertType.WARNING);
             stuckAlert.setTitle("Trapped!");
@@ -561,3 +561,9 @@ public class GameController {
 
 
 }
+
+
+
+
+
+
