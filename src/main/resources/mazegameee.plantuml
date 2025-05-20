@@ -1,0 +1,259 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+interface Activable << interface >> {
+  + activate(): void
+}
+class Chest {
+  - lock: Lock
+  - items: List<Objects>
+  + activate(): void
+  + unlock(Hero): boolean
+  + setLock(Lock): void
+  - populateChest(): void
+  + getLock(): Lock
+  + getItems(): List<Objects>
+}
+class Crowbar {
+  + breakLock(Lock): void
+}
+class Door {
+  - doorID: int
+  - room2: Room
+  - visual: Rectangle
+  - room1: Room
+  - lock: Lock
+  + getLock(): Lock
+  + getDoorID(): int
+  + setDoorID(int): void
+  + getRooms(): ArrayList<Room>
+  + activate(): void
+  + updateVisual(): void
+  + setLocked(boolean): void
+  + setVisual(Rectangle): void
+  + getX(): int
+  + getOtherRoom(Room): Room
+  + getY(): int
+  + isLocked(): boolean
+}
+interface Executable << interface >> {
+  + execute(LivingBeings): void
+}
+class FillMaze {
+  - CELL_SIZE: int
+  - npcs: List<Npc>
+  - hero: Hero
+  - gridPane: GridPane
+  - worldGrid: Room[][]
+  + markExit(Room): void
+  + addChest(int, int, int): void
+  + addDoorsAndWalls(MazeLayout): void
+  + addHeroVisual(int, int, ImageView): void
+  - addDoorWallVisual(Door, boolean): void
+  + drawRooms(): void
+  + addNPCs(int, int, int): void
+}
+class GameController {
+  - keysLabel: Label
+  - npcs: List<Npc>
+  - CELL_SIZE: int
+  - hero: Hero
+  - exitCol: int
+  - crowbarsLabel: Label
+  - onGameEnd: Consumer<Boolean>
+  - enemyHealthLabel: Label
+  - gameOver: boolean
+  - worldGrid: Room[][]
+  - exitRow: int
+  - gridPane: GridPane
+  - healthLabel: Label
+  + tryUnlockDoorInDirection(int, int, int, int): void
+  + getChestAt(int, int): Chest
+  + isCompletelyStuck(): boolean
+  + setExitCoordinates(int, int): void
+  + getNpcAt(int, int): Npc
+  + updateStats(): void
+  + randomLockAllDoors(double): void
+  + removeNpc(Npc): void
+  + isSolvable(): boolean
+  + moveNPCs(): void
+  + tryOpenChest(Chest, int, int): void
+  + getReachableChests(): Set<Chest>
+  - checkHeroDeath(): void
+  + setOnGameEnd(Consumer<Boolean>): void
+  + isSolvableWithResources(): boolean
+  + moveHero(int, int, int, int, ImageView, Pos): boolean
+}
+class GameUI {
+  - statsPanel: HBox
+  - gameController: GameController
+  - worldGrid: Room[][]
+  - hero: Hero
+  - npcMove: Timeline
+  - npcs: List<Npc>
+  - isHeroOnRight: boolean
+  - mainLayout: BorderPane
+  - fillMaze: FillMaze
+  - GRID_SIZE: int
+  - gridPane: GridPane
+  - keysLabel: Label
+  - CELL_SIZE: int
+  - crowbarsLabel: Label
+  - keyHandler: KeyHandler
+  - enemyHealthLabel: Label
+  - heroImage: ImageView
+  - healthLabel: Label
+  - startNPCMovement(): void
+  - setupGame(): void
+  + stopNPCMovement(): void
+  + getController(): GameController
+  + handleKeyPress(KeyEvent): void
+  + getScene(): Scene
+}
+class HealthPotion {
+  - healthPoints: int
+  + getHealthPoints(): int
+}
+class Hero {
+  - health: int
+  - numOfKeys: int
+  - numOfCrowbars: int
+  + addNumOfCrowbars(int): void
+  + addHealth(int): void
+  + addNumOfKeys(int): void
+  + getNumOfKeys(): int
+  + getNumOfCrowbars(): int
+}
+class Key {
+  + openLock(Lock): void
+}
+class KeyHandler {
+  - heroImage: ImageView
+  - heroRow: int
+  - heroCol: int
+  - hero: Hero
+  - cellSize: int
+  - controller: GameController
+  + getHeroCol(): int
+  + handle(KeyEvent): void
+  + getHeroRow(): int
+}
+class LivingBeings {
+  - health: int
+  - strength: int
+  + setHealth(int): void
+  + die(): void
+  + getX(): int
+  + execute(LivingBeings): void
+  + attack(LivingBeings): void
+  + takeDamage(int): void
+  + getHealth(): int
+  + getY(): int
+}
+class Lock {
+  - lockID: int
+  - locked: boolean
+  + setLockID(int): void
+  + getLockID(): int
+  + isLocked(): boolean
+  + setLocked(boolean): void
+}
+class Main {
+  - primaryStage: Stage
+  + main(String[]): void
+  - runNewGame(): void
+  + start(Stage): void
+}
+class MazeLayout {
+  - eastOpen: boolean[][]
+  - southOpen: boolean[][]
+  + hasEastOpening(int, int): boolean
+  + hasSouthOpening(int, int): boolean
+  + loadFromCSV(String, int, int): MazeLayout
+}
+class Npc {
+  - random: Random
+  - visual: StackPane
+  + setVisual(StackPane): void
+  + getVisual(): StackPane
+  + moveRandomly(int): void
+}
+class Objects
+class Room {
+  - objects: ArrayList<Objects>
+  - doors: ArrayList<Door>
+  - roomID: int
+  + isConnectedTo(Room): boolean
+  + setRoomID(int): void
+  + setDoors(ArrayList<Door>): void
+  + getRoomID(): int
+  + addObject(Objects): void
+  + getDoors(): ArrayList<Door>
+  + getX(): int
+  + getObjects(): ArrayList<Objects>
+  + addDoor(Door): void
+  + getY(): int
+}
+class StructuralElements
+class World {
+  + y: int
+  + x: int
+  + getX(): int
+  + setX(int): void
+  + getY(): int
+  + setY(int): void
+}
+
+Chest               -[#008200,dashed]-^  Activable          
+Chest               -[#595959,dashed]->  Crowbar            : "«create»"
+Chest               -[#595959,dashed]->  HealthPotion       : "«create»"
+Chest               -[#595959,dashed]->  Key                : "«create»"
+Chest              "1" *-[#595959,plain]-> "lock\n1" Lock               
+Chest               -[#595959,dashed]->  Lock               : "«create»"
+Chest               -[#000082,plain]-^  Objects            
+Chest              "1" *-[#595959,plain]-> "items\n*" Objects            
+Crowbar             -[#000082,plain]-^  Objects            
+Door                -[#008200,dashed]-^  Activable          
+Door                -[#595959,dashed]->  Lock               : "«create»"
+Door               "1" *-[#595959,plain]-> "lock\n1" Lock               
+Door               "1" *-[#595959,plain]-> "room1\n1" Room               
+Door                -[#000082,plain]-^  StructuralElements 
+FillMaze            -[#595959,dashed]->  Chest              : "«create»"
+FillMaze            -[#595959,dashed]->  Door               : "«create»"
+FillMaze           "1" *-[#595959,plain]-> "hero\n1" Hero               
+FillMaze            -[#595959,dashed]->  Npc                : "«create»"
+FillMaze           "1" *-[#595959,plain]-> "npcs\n*" Npc                
+FillMaze           "1" *-[#595959,plain]-> "worldGrid\n*" Room               
+FillMaze            -[#595959,dashed]->  Room               : "«create»"
+GameController     "1" *-[#595959,plain]-> "hero\n1" Hero               
+GameController     "1" *-[#595959,plain]-> "npcs\n*" Npc                
+GameUI              -[#595959,dashed]->  FillMaze           : "«create»"
+GameUI             "1" *-[#595959,plain]-> "fillMaze\n1" FillMaze           
+GameUI              -[#595959,dashed]->  GameController     : "«create»"
+GameUI             "1" *-[#595959,plain]-> "gameController\n1" GameController     
+GameUI              -[#595959,dashed]->  Hero               : "«create»"
+GameUI             "1" *-[#595959,plain]-> "hero\n1" Hero               
+GameUI             "1" *-[#595959,plain]-> "keyHandler\n1" KeyHandler         
+GameUI              -[#595959,dashed]->  KeyHandler         : "«create»"
+GameUI             "1" *-[#595959,plain]-> "npcs\n*" Npc                
+GameUI             "1" *-[#595959,plain]-> "worldGrid\n*" Room               
+GameUI              -[#595959,dashed]->  Room               : "«create»"
+HealthPotion        -[#000082,plain]-^  Objects            
+Hero                -[#000082,plain]-^  LivingBeings       
+Key                 -[#000082,plain]-^  Objects            
+KeyHandler         "1" *-[#595959,plain]-> "controller\n1" GameController     
+KeyHandler         "1" *-[#595959,plain]-> "hero\n1" Hero               
+LivingBeings        -[#008200,dashed]-^  Executable         
+LivingBeings        -[#000082,plain]-^  World              
+Lock                -[#000082,plain]-^  Objects            
+Main                -[#595959,dashed]->  GameUI             : "«create»"
+Npc                 -[#000082,plain]-^  LivingBeings       
+Objects             -[#000082,plain]-^  World              
+Room               "1" *-[#595959,plain]-> "doors\n*" Door               
+Room               "1" *-[#595959,plain]-> "objects\n*" Objects            
+Room                -[#000082,plain]-^  StructuralElements 
+StructuralElements  -[#000082,plain]-^  World              
+@enduml
